@@ -5,17 +5,6 @@
 
 #define SPI_ERROR_FLAG ( 1 << 0 )
 
-#define FRAMEDATA_PREFIX "frame"
-#define RESULT_PREFIX "result"
-
-#define MOSI_PREFIX "mosi"
-#define MISO_PREFIX "miso"
-
-#define UNIT_SEPARATOR '\t'
-#define LINE_SEPARATOR '\n'
-
-#define CMD_BUBBLE "bubble"
-
 class ScriptableSpiAnalyzer;
 class ScriptableSpiAnalyzerSettings;
 
@@ -34,15 +23,11 @@ public:
 
 protected: //functions
 	bool GetInputLine(char* buffer, uint bufferLength);
-	bool HandleInput();
+	bool HandleInput(Channel& channel);
 
 protected:  //vars
 	ScriptableSpiAnalyzerSettings* mSettings;
 	ScriptableSpiAnalyzer* mAnalyzer;
-
-	pid_t commandPid = 0;
-	int inpipefd[2];
-	int outpipefd[2];
 };
 
 #endif //SPI_ANALYZER_RESULTS

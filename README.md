@@ -102,10 +102,17 @@ See the "examples" directory for some basic examples of functional scripts.
 
 ### Saleae to your script
 
+During different phases of data processing, different types of messages
+will be emitted.  All messages expect a single line reply ending in a newline;
+not responding with at least an empty line will cause Saleae to hang
+while waiting for input!
+
+#### Bubbles
+
 For each frame found by Saleae, your script will receive on stdin the following
 tab-delimited fields ending with a newline character:
 
-* "result" (more message types may be defined in the future)
+* "bubble"
 * frame index: A hexadecimal integer indicating this frame's index.
 * starting sample ID: A hexadecimal integer indicating the frame's
   starting sample ID.
@@ -117,8 +124,58 @@ tab-delimited fields ending with a newline character:
 Example:
 
 ```
-result	ab6f	3ae3012	3ae309b9	mosi	c6
+bubble	ab6f	3ae3012	3ae309b9	mosi	c6
 ```
+
+Your script should respond with the text to display above this frame
+in the analyzer; if the above message data indicates that this frame
+is a write to IOCTL, you could respond with this, for example:
+
+```
+IOCTL (Write)
+```
+
+If you would not like to set a value, return an empty line.
+
+#### Markers
+
+For every sample point, your script will receive on stdin the following
+tab-delimited fields ending with a newline character:
+
+* "marker"
+* frame index: A hexadecimal integer indicating this frame's index.
+* this sample id: A hexadecimal integer indicating the current sample.
+* starting sample ID: A hexadecimal integer indicating the frame's
+  starting sample ID.
+* ending sample ID: A hexadecimal integer indicating the frame's
+  ending sample ID.
+* "mosi" or "miso"
+* value: A hexadecimal integer indicating the frame's value. 
+
+Example:
+
+```
+marker	ab6f	3ae3012	3ae3012	3ae309b9	mosi	c6
+```
+
+Your script should respond with a marker to display at this sample point
+on this channel; you can specify this by responding with any of the
+below values:
+
+* "Dot"
+* "ErrorDot"
+* "Square"
+* "ErrorSquare"
+* "UpArrow"
+* "DownArrow"
+* "X"
+* "ErrorX"
+* "Start"
+* "Stop"
+* "One"
+* "Zero"
+
+If you would not like to set a marker, return an empty line.
 
 ### Your script to Saleae
 
@@ -129,7 +186,8 @@ line must be written!
 
 Commands:
 
-* bubble: Display this text in the bubble above this frame.
+* bubble	TEXT: Display TEXT in the bubble above this frame.
+* marker	TYPE	SAMPLE_NUMBER: Show a marker of TYPE at the specified SAMPLE_NUMBER.
 
 You can respond with any number of commands per frame.
 

@@ -3,8 +3,25 @@
 #include "ScriptableSpiAnalyzerSettings.h"
 #include <AnalyzerChannelData.h>
 
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <mutex>
+
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/wait.h>
+#include <sys/prctl.h>
+#include <signal.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <errno.h>
+#include <wordexp.h>
+
  
 //enum SpiBubbleType { SpiData, SpiError };
+
+std::mutex subprocessLock;
 
 ScriptableSpiAnalyzer::ScriptableSpiAnalyzer()
 :	Analyzer2(),
@@ -40,11 +57,77 @@ void ScriptableSpiAnalyzer::WorkerThread()
 
 	AdvanceToActiveEnableEdgeWithCorrectClockPolarity();
 
+	if(pipe(inpipefd) < 0) {
+		std::cerr << "Failed to create input pipe: ";
+		std::cerr << errno;
+		std::cerr << "\n";
+		exit(errno);
+	}
+	if(pipe(outpipefd) < 0) {
+		std::cerr << "Failed to create output pipe: ";
+		std::cerr << errno;
+		std::cerr << "\n";
+		exit(errno);
+	}
+	std::cerr << "Starting fork...\n";
+	commandPid = fork();
+
+	if(commandPid == 0) {
+		std::cerr << "Forked...\n";
+		if(dup2(outpipefd[0], STDIN_FILENO) < 0) {
+			std::cerr << "Failed to redirect STDIN: ";
+			std::cerr << errno;
+			std::cerr << "\n";
+			exit(errno);
+		}
+		if(dup2(inpipefd[1], STDOUT_FILENO) < 0) {
+			std::cerr << "Failed to redirect STDOUT: ";
+			std::cerr << errno;
+			std::cerr << "\n";
+			exit(errno);
+		}
+		if(dup2(inpipefd[1], STDERR_FILENO) < 0) {
+			std::cerr << "Failed to redirect STDERR: ";
+			std::cerr << errno;
+			std::cerr << "\n";
+			exit(errno);
+		}
+
+		prctl(PR_SET_PDEATHSIG, SIGINT);
+
+		wordexp_t cmdParsed;
+		char *args[25];
+
+		wordexp(mSettings->mParserCommand, &cmdParsed, 0);
+		int i;
+		for(i = 0; i < cmdParsed.we_wordc; i++) {
+			args[i] = cmdParsed.we_wordv[i];
+		}
+		args[i] = (char*)NULL;
+
+		close(inpipefd[0]);
+		close(inpipefd[1]);
+		close(outpipefd[0]);
+		close(outpipefd[1]);
+
+		execvp(args[0], args);
+
+		std::cerr << "Failed to spawn analyzer subprocess!\n";
+	} else {
+		close(inpipefd[1]);
+		close(outpipefd[0]);
+	}
+
 	for( ; ; )
 	{
 		GetWord();
 		CheckIfThreadShouldExit();
 	}
+
+	close(inpipefd[0]);
+	close(outpipefd[1]);
+
+	kill(commandPid, SIGINT);
 }
 
 void ScriptableSpiAnalyzer::AdvanceToActiveEnableEdgeWithCorrectClockPolarity()
@@ -271,23 +354,163 @@ void ScriptableSpiAnalyzer::GetWord()
 		
 	}
 
-	//save the resuls:
-	U32 count = mArrowLocations.size();
-	for( U32 i=0; i<count; i++ )
-		mResults->AddMarker( mArrowLocations[i], mArrowMarker, mSettings->mClockChannel );
-
 	Frame result_frame;
 	result_frame.mStartingSampleInclusive = first_sample;
 	result_frame.mEndingSampleInclusive = mClock->GetSampleNumber();
 	result_frame.mData1 = mosi_word;
 	result_frame.mData2 = miso_word;
 	result_frame.mFlags = 0;
-	mResults->AddFrame( result_frame );
+	U64 frame_index = mResults->AddFrame( result_frame );
+
+	//save the resuls:
+	U32 count = mArrowLocations.size();
+	char markerType[256];
+	std::stringstream outputStream;
+	for( U32 i=0; i<count; i++ ) {
+		mResults->AddMarker(
+			mArrowLocations[i], mArrowMarker, mSettings->mClockChannel
+		);
+
+		outputStream.str("");
+		outputStream.clear();
+
+		outputStream << MARKER_PREFIX;
+		outputStream << UNIT_SEPARATOR;
+		outputStream << std::hex << frame_index;
+		outputStream << UNIT_SEPARATOR;
+		outputStream << std::hex << mArrowLocations[i];
+		outputStream << UNIT_SEPARATOR;
+		outputStream << std::hex << result_frame.mStartingSampleInclusive;
+		outputStream << UNIT_SEPARATOR;
+		outputStream << std::hex << result_frame.mEndingSampleInclusive;
+		outputStream << UNIT_SEPARATOR;
+		outputStream << MOSI_PREFIX;
+		outputStream << UNIT_SEPARATOR;
+		outputStream << std::hex << mosi_word;
+		outputStream << LINE_SEPARATOR;
+
+		std::string mosiValue = outputStream.str();
+
+		GetScriptResponse(
+			mosiValue.c_str(),
+			mosiValue.length(),
+			markerType,
+			256
+		);
+		if(strlen(markerType) > 0) {
+			mResults->AddMarker(
+				mArrowLocations[i],
+				GetMarkerType(markerType, strlen(markerType)),
+				mSettings->mMosiChannel
+			);
+		}
+
+		outputStream.str("");
+		outputStream.clear();
+
+		outputStream << MARKER_PREFIX;
+		outputStream << UNIT_SEPARATOR;
+		outputStream << std::hex << frame_index;
+		outputStream << UNIT_SEPARATOR;
+		outputStream << std::hex << mArrowLocations[i];
+		outputStream << UNIT_SEPARATOR;
+		outputStream << std::hex << result_frame.mStartingSampleInclusive;
+		outputStream << UNIT_SEPARATOR;
+		outputStream << std::hex << result_frame.mEndingSampleInclusive;
+		outputStream << UNIT_SEPARATOR;
+		outputStream << MISO_PREFIX;
+		outputStream << UNIT_SEPARATOR;
+		outputStream << std::hex << miso_word;
+		outputStream << LINE_SEPARATOR;
+
+		std::string misoValue = outputStream.str();
+
+		GetScriptResponse(
+			misoValue.c_str(),
+			misoValue.length(),
+			markerType,
+			256
+		);
+		if(strlen(markerType) > 0) {
+			mResults->AddMarker(
+				mArrowLocations[i],
+				GetMarkerType(markerType, strlen(markerType)),
+				mSettings->mMosiChannel
+			);
+		}
+	}
 	
 	mResults->CommitResults();
 
 	if( need_reset == true )
 		AdvanceToActiveEnableEdgeWithCorrectClockPolarity();
+}
+
+bool ScriptableSpiAnalyzer::GetScriptResponse(
+	const char* outBuffer,
+	uint outBufferLength,
+	char* inBuffer,
+	uint inBufferLength
+) {
+	subprocessLock.lock();
+	SendOutputLine(outBuffer, outBufferLength);
+	GetInputLine(inBuffer, inBufferLength);
+	subprocessLock.unlock();
+}
+
+bool ScriptableSpiAnalyzer::SendOutputLine(const char* buffer, uint bufferLength) {
+	write(outpipefd[1], buffer, bufferLength);
+}
+
+bool ScriptableSpiAnalyzer::GetInputLine(char* buffer, uint bufferLength) {
+	uint bufferPos = 0;
+
+	while(true) {
+		int result = read(inpipefd[0], &buffer[bufferPos], 1);
+		if(buffer[bufferPos] == '\n') {
+			break;
+		}
+
+		bufferPos++;
+	}
+	buffer[bufferPos] = '\0';
+
+	if(strlen(buffer) == 0) {
+		return false;
+	}
+	return true;
+}
+
+AnalyzerResults::MarkerType ScriptableSpiAnalyzer::GetMarkerType(char* buffer, uint bufferLength) {
+	if(strncmp(buffer, "ErrorDot", strlen(buffer)) == 0) {
+		return AnalyzerResults::ErrorDot;
+	} else if(strncmp(buffer, "Square", strlen(buffer)) == 0) {
+		return AnalyzerResults::ErrorDot;
+	} else if(strncmp(buffer, "ErrorSquare", strlen(buffer)) == 0) {
+		return AnalyzerResults::ErrorSquare;
+	} else if(strncmp(buffer, "UpArrow", strlen(buffer)) == 0) {
+		return AnalyzerResults::UpArrow;
+	} else if(strncmp(buffer, "DownArrow", strlen(buffer)) == 0) {
+		return AnalyzerResults::DownArrow;
+	} else if(strncmp(buffer, "X", strlen(buffer)) == 0) {
+		return AnalyzerResults::X;
+	} else if(strncmp(buffer, "ErrorX", strlen(buffer)) == 0) {
+		return AnalyzerResults::ErrorX;
+	} else if(strncmp(buffer, "Start", strlen(buffer)) == 0) {
+		return AnalyzerResults::Start;
+	} else if(strncmp(buffer, "Stop", strlen(buffer)) == 0) {
+		return AnalyzerResults::Stop;
+	} else if(strncmp(buffer, "One", strlen(buffer)) == 0) {
+		return AnalyzerResults::One;
+	} else if(strncmp(buffer, "Zero", strlen(buffer)) == 0) {
+		return AnalyzerResults::Zero;
+	} else if(strncmp(buffer, "Dot", strlen(buffer)) == 0) {
+		return AnalyzerResults::Dot;
+	}
+	std::cerr << "Unrecognized marker type: ";
+	std::cerr << buffer;
+	std::cerr << "; using Dot instead.\n";
+	return AnalyzerResults::Dot;
 }
 
 bool ScriptableSpiAnalyzer::NeedsRerun()

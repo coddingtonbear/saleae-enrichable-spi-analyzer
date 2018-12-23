@@ -5,17 +5,6 @@
 
 #include <iostream>
 #include <sstream>
-#include <string>
-
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/wait.h>
-#include <sys/prctl.h>
-#include <signal.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <errno.h>
-#include <wordexp.h>
 
 #pragma warning(disable: 4996) //warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead.
 
@@ -24,110 +13,10 @@ ScriptableSpiAnalyzerResults::ScriptableSpiAnalyzerResults( ScriptableSpiAnalyze
 	mSettings( settings ),
 	mAnalyzer( analyzer )
 {
-	if(pipe(inpipefd) < 0) {
-		std::cerr << "Failed to create input pipe: ";
-		std::cerr << errno;
-		std::cerr << "\n";
-		exit(errno);
-	}
-	if(pipe(outpipefd) < 0) {
-		std::cerr << "Failed to create output pipe: ";
-		std::cerr << errno;
-		std::cerr << "\n";
-		exit(errno);
-	}
-	commandPid = fork();
-
-	if(commandPid == 0) {
-		if(dup2(outpipefd[0], STDIN_FILENO) < 0) {
-			std::cerr << "Failed to redirect STDIN: ";
-			std::cerr << errno;
-			std::cerr << "\n";
-			exit(errno);
-		}
-		if(dup2(inpipefd[1], STDOUT_FILENO) < 0) {
-			std::cerr << "Failed to redirect STDOUT: ";
-			std::cerr << errno;
-			std::cerr << "\n";
-			exit(errno);
-		}
-		if(dup2(inpipefd[1], STDERR_FILENO) < 0) {
-			std::cerr << "Failed to redirect STDERR: ";
-			std::cerr << errno;
-			std::cerr << "\n";
-			exit(errno);
-		}
-
-		prctl(PR_SET_PDEATHSIG, SIGTERM);
-
-		wordexp_t cmdParsed;
-		char *args[25];
-
-		wordexp(mSettings->mParserCommand, &cmdParsed, 0);
-		int i;
-		for(i = 0; i < cmdParsed.we_wordc; i++) {
-			args[i] = cmdParsed.we_wordv[i];
-		}
-		args[i] = (char*)NULL;
-
-		close(inpipefd[0]);
-		close(inpipefd[1]);
-		close(outpipefd[0]);
-		close(outpipefd[1]);
-
-		execvp(args[0], args);
-
-		std::cerr << "Failed to spawn analyzer subprocess!\n";
-	} else {
-		close(inpipefd[1]);
-		close(outpipefd[0]);
-	}
 }
 
 ScriptableSpiAnalyzerResults::~ScriptableSpiAnalyzerResults()
 {
-	close(inpipefd[0]);
-	close(outpipefd[1]);
-
-	kill(commandPid, SIGKILL);
-}
-
-bool ScriptableSpiAnalyzerResults::GetInputLine(char* buffer, uint bufferLength) {
-	uint bufferPos = 0;
-	bool foundNewline = false;
-
-	while(!foundNewline) {
-		int result = read(inpipefd[0], &buffer[bufferPos], 1);
-		if(result) {
-			if(buffer[bufferPos] == '\n') {
-				foundNewline = true;
-			}
-
-			bufferPos++;
-		}
-	}
-	buffer[bufferPos] = '\0';
-
-	if(strlen(buffer) == 1) {  // If only newline; return False
-		return false;
-	}
-	return true;
-}
-
-bool ScriptableSpiAnalyzerResults::HandleInput() {
-	bool gotResultString = false;
-
-	char inputBuffer[512];
-	while(GetInputLine(inputBuffer, 512)) {
-		if(strncmp(inputBuffer, CMD_BUBBLE, strlen(CMD_BUBBLE)) == 0) {
-			AddResultString(
-				strchr(inputBuffer, UNIT_SEPARATOR) + 1
-			);
-			gotResultString = true;
-		}
-	}
-
-	return gotResultString;
 }
 
 void ScriptableSpiAnalyzerResults::GenerateBubbleText( U64 frame_index, Channel& channel, DisplayBase display_base )  //unrefereced vars commented out to remove warnings.
@@ -139,7 +28,7 @@ void ScriptableSpiAnalyzerResults::GenerateBubbleText( U64 frame_index, Channel&
 
 	if( ( frame.mFlags & SPI_ERROR_FLAG ) == 0 )
 	{
-		outputStream << RESULT_PREFIX;
+		outputStream << BUBBLE_PREFIX;
 		outputStream << UNIT_SEPARATOR;
 		outputStream << std::hex << frame_index;
 		outputStream << UNIT_SEPARATOR;
@@ -148,7 +37,7 @@ void ScriptableSpiAnalyzerResults::GenerateBubbleText( U64 frame_index, Channel&
 		outputStream << std::hex << frame.mEndingSampleInclusive;
 		outputStream << UNIT_SEPARATOR;
 
-		bool gotResultString = false;
+		char bubbleText[256];
 		if( channel == mSettings->mMosiChannel )
 		{
 			outputStream << MOSI_PREFIX;
@@ -157,11 +46,14 @@ void ScriptableSpiAnalyzerResults::GenerateBubbleText( U64 frame_index, Channel&
 			outputStream << LINE_SEPARATOR;
 
 			std::string value = outputStream.str();
-			write(outpipefd[1], value.c_str(), value.length());
-
-			gotResultString = HandleInput();
-
-		}else
+			mAnalyzer->GetScriptResponse(
+				value.c_str(),
+				value.length(),
+				bubbleText,
+				256
+			);
+		}
+		else
 		{
 			outputStream << MISO_PREFIX;
 			outputStream << UNIT_SEPARATOR;
@@ -169,13 +61,14 @@ void ScriptableSpiAnalyzerResults::GenerateBubbleText( U64 frame_index, Channel&
 			outputStream << LINE_SEPARATOR;
 
 			std::string value = outputStream.str();
-			write(outpipefd[1], value.c_str(), value.length());
-
-			gotResultString = HandleInput();
+			mAnalyzer->GetScriptResponse(
+				value.c_str(),
+				value.length(),
+				bubbleText,
+				256
+			);
 		}
-		if(!gotResultString) {
-			AddResultString( " " );
-		}
+		AddResultString(bubbleText);
 	}else
 	{
 			AddResultString( "Error" );

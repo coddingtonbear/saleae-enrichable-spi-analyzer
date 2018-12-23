@@ -5,6 +5,19 @@
 #include "ScriptableSpiAnalyzerResults.h"
 #include "ScriptableSpiSimulationDataGenerator.h"
 
+#define FRAMEDATA_PREFIX "frame"
+#define BUBBLE_PREFIX "bubble"
+#define MARKER_PREFIX "marker"
+
+#define MOSI_PREFIX "mosi"
+#define MISO_PREFIX "miso"
+
+#define UNIT_SEPARATOR '\t'
+#define LINE_SEPARATOR '\n'
+
+#define CMD_BUBBLE "bubble"
+#define CMD_MARKER "marker"
+
 class ScriptableSpiAnalyzerSettings;
 class ScriptableSpiAnalyzer : public Analyzer2
 {
@@ -20,7 +33,19 @@ public:
 	virtual const char* GetAnalyzerName() const;
 	virtual bool NeedsRerun();
 
+	// Script communication functions
+	bool GetScriptResponse(
+		const char* outBuffer,
+		uint outBufferLength,
+		char* inBuffer,
+		uint inBufferLength
+	);
+	AnalyzerResults::MarkerType GetMarkerType(char* buffer, uint bufferLength);
+
 protected: //functions
+	bool SendOutputLine(const char* buffer, uint bufferLength);
+	bool GetInputLine(char* buffer, uint bufferLength);
+
 	void Setup();
 	void AdvanceToActiveEnableEdge();
 	bool IsInitialClockPolarityCorrect();
@@ -44,6 +69,10 @@ protected:  //vars
 	U64 mCurrentSample;
 	AnalyzerResults::MarkerType mArrowMarker;
 	std::vector<U64> mArrowLocations;
+
+	pid_t commandPid = 0;
+	int inpipefd[2];
+	int outpipefd[2];
 
 #pragma warning( pop )
 };
