@@ -1,10 +1,13 @@
-#include "SpiAnalyzerSettings.h"
+#include "ScriptableSpiAnalyzerSettings.h"
 
 #include <AnalyzerHelpers.h>
 #include <sstream>
 #include <cstring>
 
-SpiAnalyzerSettings::SpiAnalyzerSettings()
+#include <iostream>
+#include <fstream>
+
+ScriptableSpiAnalyzerSettings::ScriptableSpiAnalyzerSettings()
 :	mMosiChannel( UNDEFINED_CHANNEL ),
 	mMisoChannel( UNDEFINED_CHANNEL ),
 	mClockChannel( UNDEFINED_CHANNEL ),
@@ -13,7 +16,8 @@ SpiAnalyzerSettings::SpiAnalyzerSettings()
 	mBitsPerTransfer( 8 ),
 	mClockInactiveState( BIT_LOW ),
 	mDataValidEdge( AnalyzerEnums::LeadingEdge ), 
-	mEnableActiveState( BIT_LOW )
+	mEnableActiveState( BIT_LOW ),
+	mParserCommand("")
 {
 	mMosiChannelInterface.reset( new AnalyzerSettingInterfaceChannel() );
 	mMosiChannelInterface->SetTitleAndTooltip( "MOSI", "Master Out, Slave In" );
@@ -73,6 +77,11 @@ SpiAnalyzerSettings::SpiAnalyzerSettings()
 	mEnableActiveStateInterface->AddNumber( BIT_HIGH, "Enable line is Active High", "" );
 	mEnableActiveStateInterface->SetNumber( mEnableActiveState );
 
+	mParserCommandInterface.reset(new AnalyzerSettingInterfaceText());
+	mParserCommandInterface->SetTitleAndTooltip("Parser Command", "Command to run for parsing SPI data.");
+	mParserCommandInterface->SetTextType(AnalyzerSettingInterfaceText::NormalText);
+	mParserCommandInterface->SetText(mParserCommand);
+
 
 	AddInterface( mMosiChannelInterface.get() );
 	AddInterface( mMisoChannelInterface.get() );
@@ -83,6 +92,7 @@ SpiAnalyzerSettings::SpiAnalyzerSettings()
 	AddInterface( mClockInactiveStateInterface.get() );
 	AddInterface( mDataValidEdgeInterface.get() );
 	AddInterface( mEnableActiveStateInterface.get() );
+	AddInterface( mParserCommandInterface.get() );
 
 
 	//AddExportOption( 0, "Export as text/csv file", "text (*.txt);;csv (*.csv)" );
@@ -97,11 +107,11 @@ SpiAnalyzerSettings::SpiAnalyzerSettings()
 	AddChannel( mEnableChannel, "ENABLE", false );
 }
 
-SpiAnalyzerSettings::~SpiAnalyzerSettings()
+ScriptableSpiAnalyzerSettings::~ScriptableSpiAnalyzerSettings()
 {
 }
 
-bool SpiAnalyzerSettings::SetSettingsFromInterfaces()
+bool ScriptableSpiAnalyzerSettings::SetSettingsFromInterfaces()
 {
 	Channel mosi = mMosiChannelInterface->GetChannel();
 	Channel miso = mMisoChannelInterface->GetChannel();
@@ -136,6 +146,7 @@ bool SpiAnalyzerSettings::SetSettingsFromInterfaces()
 	mClockInactiveState =	(BitState) U32( mClockInactiveStateInterface->GetNumber() );
 	mDataValidEdge =		(AnalyzerEnums::Edge)  U32( mDataValidEdgeInterface->GetNumber() );
 	mEnableActiveState =	(BitState) U32( mEnableActiveStateInterface->GetNumber() );
+	mParserCommand =		mParserCommandInterface->GetText();
 
 	ClearChannels();
 	AddChannel( mMosiChannel, "MOSI", mMosiChannel != UNDEFINED_CHANNEL );
@@ -146,15 +157,15 @@ bool SpiAnalyzerSettings::SetSettingsFromInterfaces()
 	return true;
 }
 
-void SpiAnalyzerSettings::LoadSettings( const char* settings )
+void ScriptableSpiAnalyzerSettings::LoadSettings( const char* settings )
 {
 	SimpleArchive text_archive;
 	text_archive.SetString( settings );
 
 	const char* name_string;	//the first thing in the archive is the name of the protocol analyzer that the data belongs to.
 	text_archive >> &name_string;
-	if( strcmp( name_string, "SaleaeSpiAnalyzer" ) != 0 )
-		AnalyzerHelpers::Assert( "SaleaeSpiAnalyzer: Provided with a settings string that doesn't belong to us;" );
+	if( strcmp( name_string, "SaleaeScriptableSpiAnalyzer" ) != 0 )
+		AnalyzerHelpers::Assert( "SaleaeScriptableSpiAnalyzer: Provided with a settings string that doesn't belong to us;" );
 
 	text_archive >>  mMosiChannel;
 	text_archive >>  mMisoChannel;
@@ -165,6 +176,7 @@ void SpiAnalyzerSettings::LoadSettings( const char* settings )
 	text_archive >>  *(U32*)&mClockInactiveState;
 	text_archive >>  *(U32*)&mDataValidEdge;
 	text_archive >>  *(U32*)&mEnableActiveState;
+	text_archive >>  &mParserCommand;
 
 	//bool success = text_archive >> mUsePackets;  //new paramater added -- do this for backwards compatibility
 	//if( success == false )
@@ -179,11 +191,11 @@ void SpiAnalyzerSettings::LoadSettings( const char* settings )
 	UpdateInterfacesFromSettings();
 }
 
-const char* SpiAnalyzerSettings::SaveSettings()
+const char* ScriptableSpiAnalyzerSettings::SaveSettings()
 {
 	SimpleArchive text_archive;
 
-	text_archive << "SaleaeSpiAnalyzer";
+	text_archive << "SaleaeScriptableSpiAnalyzer";
 	text_archive <<  mMosiChannel;
 	text_archive <<  mMisoChannel;
 	text_archive <<  mClockChannel;
@@ -193,11 +205,12 @@ const char* SpiAnalyzerSettings::SaveSettings()
 	text_archive <<  mClockInactiveState;
 	text_archive <<  mDataValidEdge;
 	text_archive <<  mEnableActiveState;
+	text_archive <<  mParserCommand;
 
 	return SetReturnString( text_archive.GetString() );
 }
 
-void SpiAnalyzerSettings::UpdateInterfacesFromSettings()
+void ScriptableSpiAnalyzerSettings::UpdateInterfacesFromSettings()
 {
 	mMosiChannelInterface->SetChannel( mMosiChannel );
 	mMisoChannelInterface->SetChannel( mMisoChannel );
@@ -208,4 +221,5 @@ void SpiAnalyzerSettings::UpdateInterfacesFromSettings()
 	mClockInactiveStateInterface->SetNumber( mClockInactiveState );
 	mDataValidEdgeInterface->SetNumber( mDataValidEdge );
 	mEnableActiveStateInterface->SetNumber( mEnableActiveState );
+	mParserCommandInterface->SetText( mParserCommand );
 }

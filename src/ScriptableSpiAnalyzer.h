@@ -2,15 +2,15 @@
 #define SPI_ANALYZER_H
 
 #include <Analyzer.h>
-#include "SpiAnalyzerResults.h"
-#include "SpiSimulationDataGenerator.h"
+#include "ScriptableSpiAnalyzerResults.h"
+#include "ScriptableSpiSimulationDataGenerator.h"
 
-class SpiAnalyzerSettings;
-class SpiAnalyzer : public Analyzer2
+class ScriptableSpiAnalyzerSettings;
+class ScriptableSpiAnalyzer : public Analyzer2
 {
 public:
-	SpiAnalyzer();
-	virtual ~SpiAnalyzer();
+	ScriptableSpiAnalyzer();
+	virtual ~ScriptableSpiAnalyzer();
 	virtual void SetupResults();
 	virtual void WorkerThread();
 
@@ -31,10 +31,10 @@ protected: //functions
 #pragma warning( push )
 #pragma warning( disable : 4251 ) //warning C4251: 'SerialAnalyzer::<...>' : class <...> needs to have dll-interface to be used by clients of class
 protected:  //vars
-	std::auto_ptr< SpiAnalyzerSettings > mSettings;
-	std::auto_ptr< SpiAnalyzerResults > mResults;
+	std::auto_ptr< ScriptableSpiAnalyzerSettings > mSettings;
+	std::auto_ptr< ScriptableSpiAnalyzerResults > mResults;
 	bool mSimulationInitilized;
-	SpiSimulationDataGenerator mSimulationDataGenerator;
+	ScriptableSpiSimulationDataGenerator mSimulationDataGenerator;
 
 	AnalyzerChannelData* mMosi; 
 	AnalyzerChannelData* mMiso;

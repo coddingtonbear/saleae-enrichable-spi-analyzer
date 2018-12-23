@@ -1,14 +1,14 @@
 
-#include "SpiAnalyzer.h"
-#include "SpiAnalyzerSettings.h"
+#include "ScriptableSpiAnalyzer.h"
+#include "ScriptableSpiAnalyzerSettings.h"
 #include <AnalyzerChannelData.h>
 
  
 //enum SpiBubbleType { SpiData, SpiError };
 
-SpiAnalyzer::SpiAnalyzer()
+ScriptableSpiAnalyzer::ScriptableSpiAnalyzer()
 :	Analyzer2(),
-	mSettings( new SpiAnalyzerSettings() ),
+	mSettings( new ScriptableSpiAnalyzerSettings() ),
 	mSimulationInitilized( false ),
 	mMosi( NULL ),
 	mMiso( NULL ),
@@ -18,14 +18,14 @@ SpiAnalyzer::SpiAnalyzer()
 	SetAnalyzerSettings( mSettings.get() );
 }
 
-SpiAnalyzer::~SpiAnalyzer()
+ScriptableSpiAnalyzer::~ScriptableSpiAnalyzer()
 {
 	KillThread();
 }
 
-void SpiAnalyzer::SetupResults()
+void ScriptableSpiAnalyzer::SetupResults()
 {
-	mResults.reset( new SpiAnalyzerResults( this, mSettings.get() ) );
+	mResults.reset( new ScriptableSpiAnalyzerResults( this, mSettings.get() ) );
 	SetAnalyzerResults( mResults.get() );
 
 	if( mSettings->mMosiChannel != UNDEFINED_CHANNEL )
@@ -34,7 +34,7 @@ void SpiAnalyzer::SetupResults()
 		mResults->AddChannelBubblesWillAppearOn( mSettings->mMisoChannel );
 }
 
-void SpiAnalyzer::WorkerThread()
+void ScriptableSpiAnalyzer::WorkerThread()
 {
 	Setup();
 
@@ -47,7 +47,7 @@ void SpiAnalyzer::WorkerThread()
 	}
 }
 
-void SpiAnalyzer::AdvanceToActiveEnableEdgeWithCorrectClockPolarity()
+void ScriptableSpiAnalyzer::AdvanceToActiveEnableEdgeWithCorrectClockPolarity()
 {
 	mResults->CommitPacketAndStartNewPacket();
 	mResults->CommitResults();
@@ -61,7 +61,7 @@ void SpiAnalyzer::AdvanceToActiveEnableEdgeWithCorrectClockPolarity()
 	}
 }
 
-void SpiAnalyzer::Setup()
+void ScriptableSpiAnalyzer::Setup()
 {
 	bool allow_last_trailing_clock_edge_to_fall_outside_enable = false;
 	if( mSettings->mDataValidEdge == AnalyzerEnums::LeadingEdge )
@@ -103,7 +103,7 @@ void SpiAnalyzer::Setup()
 
 }
 
-void SpiAnalyzer::AdvanceToActiveEnableEdge()
+void ScriptableSpiAnalyzer::AdvanceToActiveEnableEdge()
 {
 	if( mEnable != NULL )
 	{
@@ -123,7 +123,7 @@ void SpiAnalyzer::AdvanceToActiveEnableEdge()
 	}
 }
 
-bool SpiAnalyzer::IsInitialClockPolarityCorrect()
+bool ScriptableSpiAnalyzer::IsInitialClockPolarityCorrect()
 {
 	if( mClock->GetBitState() == mSettings->mClockInactiveState )
 		return true;
@@ -158,7 +158,7 @@ bool SpiAnalyzer::IsInitialClockPolarityCorrect()
 	}
 }
 
-bool SpiAnalyzer::WouldAdvancingTheClockToggleEnable()
+bool ScriptableSpiAnalyzer::WouldAdvancingTheClockToggleEnable()
 {
 	if( mEnable == NULL )
 		return false;
@@ -172,7 +172,7 @@ bool SpiAnalyzer::WouldAdvancingTheClockToggleEnable()
 		return true;
 }
 
-void SpiAnalyzer::GetWord()
+void ScriptableSpiAnalyzer::GetWord()
 {
 	//we're assuming we come into this function with the clock in the idle state;
 
@@ -290,12 +290,12 @@ void SpiAnalyzer::GetWord()
 		AdvanceToActiveEnableEdgeWithCorrectClockPolarity();
 }
 
-bool SpiAnalyzer::NeedsRerun()
+bool ScriptableSpiAnalyzer::NeedsRerun()
 {
 	return false;
 }
 
-U32 SpiAnalyzer::GenerateSimulationData( U64 minimum_sample_index, U32 device_sample_rate, SimulationChannelDescriptor** simulation_channels )
+U32 ScriptableSpiAnalyzer::GenerateSimulationData( U64 minimum_sample_index, U32 device_sample_rate, SimulationChannelDescriptor** simulation_channels )
 {
 	if( mSimulationInitilized == false )
 	{
@@ -307,24 +307,24 @@ U32 SpiAnalyzer::GenerateSimulationData( U64 minimum_sample_index, U32 device_sa
 }
 
 
-U32 SpiAnalyzer::GetMinimumSampleRateHz()
+U32 ScriptableSpiAnalyzer::GetMinimumSampleRateHz()
 {
 	return 10000; //we don't have any idea, depends on the SPI rate, etc.; return the lowest rate.
 }
 
-const char* SpiAnalyzer::GetAnalyzerName() const
+const char* ScriptableSpiAnalyzer::GetAnalyzerName() const
 {
-	return "SPI";
+	return "SPI (Scriptable)";
 }
 
 const char* GetAnalyzerName()
 {
-	return "SPI";
+	return "SPI (Scriptable)";
 }
 
 Analyzer* CreateAnalyzer()
 {
-	return new SpiAnalyzer();
+	return new ScriptableSpiAnalyzer();
 }
 
 void DestroyAnalyzer( Analyzer* analyzer )

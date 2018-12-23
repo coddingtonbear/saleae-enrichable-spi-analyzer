@@ -4,11 +4,11 @@
 #include <AnalyzerSettings.h>
 #include <AnalyzerTypes.h>
 
-class SpiAnalyzerSettings : public AnalyzerSettings
+class ScriptableSpiAnalyzerSettings : public AnalyzerSettings
 {
 public:
-	SpiAnalyzerSettings();
-	virtual ~SpiAnalyzerSettings();
+	ScriptableSpiAnalyzerSettings();
+	virtual ~ScriptableSpiAnalyzerSettings();
 
 	virtual bool SetSettingsFromInterfaces();
 	virtual void LoadSettings( const char* settings );
@@ -25,6 +25,7 @@ public:
 	BitState mClockInactiveState;
 	AnalyzerEnums::Edge mDataValidEdge;
 	BitState mEnableActiveState;
+	const char* mParserCommand;
 
 
 protected:
@@ -37,6 +38,7 @@ protected:
 	std::auto_ptr< AnalyzerSettingInterfaceNumberList > mClockInactiveStateInterface;
 	std::auto_ptr< AnalyzerSettingInterfaceNumberList > mDataValidEdgeInterface;
 	std::auto_ptr< AnalyzerSettingInterfaceNumberList > mEnableActiveStateInterface;
+	std::auto_ptr< AnalyzerSettingInterfaceText >		mParserCommandInterface;
 };
 
 #endif //SPI_ANALYZER_SETTINGS
