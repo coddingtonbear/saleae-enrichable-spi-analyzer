@@ -98,8 +98,10 @@ Then, open the newly created solution file located here: `build\spi_analyzer.sln
 
 ## Protocol
 
-See the "examples" directory for some basic examples of functional scripts.
+See the "examples" directory for some basic examples of functional scripts, and
+if your language of choice is Python, see the "Python Module" section below.
 
+All interaction between your script and Saleae is over standard out and in.
 During different phases of data processing, different types of messages
 will be emitted.  All messages must be replied to with at least one
 line of output; that line may be empty if your script does not want
@@ -189,3 +191,77 @@ and "Stop" on the fourth sample of mosi:
 ```
 
 If you would not like to set a marker on any sample, return an empty line.
+
+
+## Python Module
+
+If you're hoping to put together an analyzer as quickly as possible, using
+the included python module is probably your best path forward.
+
+### Installation
+
+Use of this Python module requires at least Python 3.4.
+
+From within the `python` directory:
+
+```
+pip install .
+```
+
+### Use
+
+Using this is as simple as creating your own module somewhere that subclasses
+`saleae_scriptable_spi_analyzer.ScriptableSpiAnalyzer` with methods for the
+features you'd like to use; here is a basic example:
+
+```python
+import sys
+
+from saleae_scriptable_spi_analyzer import (
+    ScriptableSpiAnalyzer, Channel, Marker, MarkerType, BubbleText
+)
+
+
+class MySimpleAnalyzer(ScriptableSpiAnalyzer):
+    def get_bubble_text(
+        self,
+        frame_index: int,
+        start_sample: int,
+        end_sample: int,
+        direction: Channel,
+        value: int
+    ) -> BubbleText:
+        return BubbleText(
+            "This message will be displayed above every frame in the blue bubble"
+        )
+
+    def get_markers(
+        self,
+        frame_index: int,
+        sample_count: int,
+        start_sample: int,
+        end_sample: int,
+        mosi_value: int,
+        miso_value: int
+    ) -> List[Marker]:
+        markers = []
+
+        if(miso_value == 0xff) {
+            # This will show a "Stop" marker on the zeroth sample
+            # of the frame on the MISO channel when its value is 0xff.
+            markers.append(
+                Marker(0, Channel.MISO, MarkerType.Stop)
+            )
+        }
+
+        return markers
+
+if __name__ == '__main__':
+    MySimpleAnalyzer(sys.argv[1:])
+```
+
+The following methods can be implemented for interacting with Saleae:
+
+* `get_bubble_text(frame_index, start_sample, end_sample, direction, value)`: Set the bubble text (the text shown in blue above
+  the frame) for this frame.
+* `get_markers(frame_index, sample_count, start_sample, end_sample, mosi_value, miso_value)`: Return markers to display at given sample points.
