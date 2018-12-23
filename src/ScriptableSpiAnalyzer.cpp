@@ -86,12 +86,6 @@ void ScriptableSpiAnalyzer::WorkerThread()
 			std::cerr << "\n";
 			exit(errno);
 		}
-		if(dup2(inpipefd[1], STDERR_FILENO) < 0) {
-			std::cerr << "Failed to redirect STDERR: ";
-			std::cerr << errno;
-			std::cerr << "\n";
-			exit(errno);
-		}
 
 		prctl(PR_SET_PDEATHSIG, SIGINT);
 

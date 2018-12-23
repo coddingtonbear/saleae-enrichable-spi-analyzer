@@ -68,7 +68,9 @@ void ScriptableSpiAnalyzerResults::GenerateBubbleText( U64 frame_index, Channel&
 				256
 			);
 		}
-		AddResultString(bubbleText);
+		if(strlen(bubbleText) > 0) {
+			AddResultString(bubbleText);
+		}
 	}else
 	{
 			AddResultString( "Error" );

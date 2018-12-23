@@ -2,3 +2,9 @@ build/*
 cmake/*
 .vscode/*
 *.swp
+bin/*
+include/*
+lib/*
+*.pyc
+__pycache__/*
+*egg-info*
