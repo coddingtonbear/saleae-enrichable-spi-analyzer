@@ -9,14 +9,17 @@ def get_bubble_text(line):
     return "My sample message"
 
 
-def get_marker(line):
-    _, idx, sample, start, end, direction, value = line.split('\t')
+def get_markers(line):
+    _, idx, sample_count, start, end, mosi, miso = line.split('\t')
 
-    if sample == start:
-        if int(value, 16) == 0xff:
-            return "Stop"
-        elif int(value, 16) == 0x00:
-            return "Start"
+    markers = []
+
+    if int(miso, 16) == 0xff:
+        markers.append("0\tmiso\tStop")
+    if int(miso, 16) == 0x00:
+        markers.append("0\tmosi\tStart")
+
+    return markers
 
 
 def main(logfile, *args):
@@ -32,7 +35,9 @@ def main(logfile, *args):
         if line.startswith('bubble\t'):
             result = get_bubble_text(line)
         elif line.startswith('marker\t'):
-            result = get_marker(line)
+            markers = get_markers(line)
+            if markers:
+                result = "\n".join(markers) + "\n"
 
         if not result:
             result = ""

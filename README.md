@@ -144,23 +144,29 @@ tab-delimited fields ending with a newline character:
 
 * "marker"
 * frame index: A hexadecimal integer indicating this frame's index.
-* this sample id: A hexadecimal integer indicating the current sample.
+* sample count: A hexadecimal number of samples taken as part of this frame.
 * starting sample ID: A hexadecimal integer indicating the frame's
   starting sample ID.
 * ending sample ID: A hexadecimal integer indicating the frame's
   ending sample ID.
-* "mosi" or "miso"
-* value: A hexadecimal integer indicating the frame's value. 
+* mosi value: A hexadecimal integer indicating the frame's mosi value. 
+* miso value: A hexadecimal integer indicating the frame's miso value. 
 
 Example:
 
 ```
-marker	ab6f	3ae3012	3ae3012	3ae309b9	mosi	c6
+marker	ab6f	8	3ae3012	3ae309b9	c6	fa
 ```
 
-Your script should respond with a marker to display at this sample point
-on this channel; you can specify this by responding with any of the
-below values:
+Your script should respond with any number lines, each composed of
+ three tab-separated values; send an empty line to finish.
+
+* sample number: The (hexadecimal) sample number (within this frame) at which to
+  display this marker.
+* "miso" or "mosi"
+* marker type (see below)
+
+Possible marker types are:
 
 * "Dot"
 * "ErrorDot"
@@ -175,7 +181,16 @@ below values:
 * "One"
 * "Zero"
 
-If you would not like to set a marker, return an empty line.
+For example; if you want to show "DownArrow" on the first sample of miso,
+and "Stop" on the fourth sample of mosi:
+
+```
+0	miso	DownArrow
+4	mosi	Stop
+
+```
+
+If you would not like to set a marker on any sample, return an empty line.
 
 ### Your script to Saleae
 

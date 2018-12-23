@@ -81,7 +81,6 @@ void ScriptableSpiAnalyzerResults::GenerateExportFile( const char* file, Display
 {
 	//export_type_user_id is only important if we have more than one export type.
 
-
 	std::stringstream ss;
 	void* f = AnalyzerHelpers::StartFile( file );
 

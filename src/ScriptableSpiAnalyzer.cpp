@@ -364,81 +364,76 @@ void ScriptableSpiAnalyzer::GetWord()
 
 	//save the resuls:
 	U32 count = mArrowLocations.size();
-	char markerType[256];
-	std::stringstream outputStream;
 	for( U32 i=0; i<count; i++ ) {
 		mResults->AddMarker(
 			mArrowLocations[i], mArrowMarker, mSettings->mClockChannel
 		);
+	}
 
-		outputStream.str("");
-		outputStream.clear();
+	std::stringstream outputStream;
 
-		outputStream << MARKER_PREFIX;
-		outputStream << UNIT_SEPARATOR;
-		outputStream << std::hex << frame_index;
-		outputStream << UNIT_SEPARATOR;
-		outputStream << std::hex << mArrowLocations[i];
-		outputStream << UNIT_SEPARATOR;
-		outputStream << std::hex << result_frame.mStartingSampleInclusive;
-		outputStream << UNIT_SEPARATOR;
-		outputStream << std::hex << result_frame.mEndingSampleInclusive;
-		outputStream << UNIT_SEPARATOR;
-		outputStream << MOSI_PREFIX;
-		outputStream << UNIT_SEPARATOR;
-		outputStream << std::hex << mosi_word;
-		outputStream << LINE_SEPARATOR;
+	outputStream << MARKER_PREFIX;
+	outputStream << UNIT_SEPARATOR;
+	outputStream << std::hex << frame_index;
+	outputStream << UNIT_SEPARATOR;
+	outputStream << std::hex << count;
+	outputStream << UNIT_SEPARATOR;
+	outputStream << std::hex << result_frame.mStartingSampleInclusive;
+	outputStream << UNIT_SEPARATOR;
+	outputStream << std::hex << result_frame.mEndingSampleInclusive;
+	outputStream << UNIT_SEPARATOR;
+	outputStream << std::hex << mosi_word;
+	outputStream << UNIT_SEPARATOR;
+	outputStream << std::hex << miso_word;
+	outputStream << LINE_SEPARATOR;
 
-		std::string mosiValue = outputStream.str();
+	std::string outputValue = outputStream.str();
 
-		GetScriptResponse(
-			mosiValue.c_str(),
-			mosiValue.length(),
-			markerType,
+	subprocessLock.lock();
+	SendOutputLine(
+		outputValue.c_str(),
+		outputValue.length()
+	);
+	char markerMessage[256];
+	while(true) {
+		GetInputLine(
+			markerMessage,
 			256
 		);
-		if(strlen(markerType) > 0) {
-			mResults->AddMarker(
-				mArrowLocations[i],
-				GetMarkerType(markerType, strlen(markerType)),
-				mSettings->mMosiChannel
-			);
-		}
+		if(strlen(markerMessage) > 0) {
+			char forever[256];
+			strcpy(forever, markerMessage);
 
-		outputStream.str("");
-		outputStream.clear();
+			char *sampleNumberStr = strtok(markerMessage, "\t");
+			char *channelStr = strtok(NULL, "\t");
+			char *markerTypeStr = strtok(NULL, "\t");
 
-		outputStream << MARKER_PREFIX;
-		outputStream << UNIT_SEPARATOR;
-		outputStream << std::hex << frame_index;
-		outputStream << UNIT_SEPARATOR;
-		outputStream << std::hex << mArrowLocations[i];
-		outputStream << UNIT_SEPARATOR;
-		outputStream << std::hex << result_frame.mStartingSampleInclusive;
-		outputStream << UNIT_SEPARATOR;
-		outputStream << std::hex << result_frame.mEndingSampleInclusive;
-		outputStream << UNIT_SEPARATOR;
-		outputStream << MISO_PREFIX;
-		outputStream << UNIT_SEPARATOR;
-		outputStream << std::hex << miso_word;
-		outputStream << LINE_SEPARATOR;
-
-		std::string misoValue = outputStream.str();
-
-		GetScriptResponse(
-			misoValue.c_str(),
-			misoValue.length(),
-			markerType,
-			256
-		);
-		if(strlen(markerType) > 0) {
-			mResults->AddMarker(
-				mArrowLocations[i],
-				GetMarkerType(markerType, strlen(markerType)),
-				mSettings->mMosiChannel
-			);
+			if(sampleNumberStr != NULL && channelStr != NULL && markerTypeStr != NULL) {
+				U64 sampleNumber = strtoll(sampleNumberStr, NULL, 16);
+				Channel* channel = NULL;
+				if(strcmp(channelStr, "mosi") == 0) {
+					channel = &mSettings->mMosiChannel;
+				} else if (strcmp(channelStr, "miso") == 0) {
+					channel = &mSettings->mMisoChannel;
+				}
+				if(channel != NULL) {
+					mResults->AddMarker(
+						mArrowLocations[sampleNumber],
+						GetMarkerType(markerTypeStr, strlen(markerTypeStr)),
+						*channel
+					);
+				}
+			} else {
+				std::cerr << "Unable to tokenize marker message input: \"";
+				std::cerr << forever;
+				std::cerr << "\"; input should be three tab-delimited fields: ";
+				std::cerr << "sample_number\tchannel\tmarker_type\n";
+			}
+		} else {
+			break;
 		}
 	}
+	subprocessLock.unlock();
 	
 	mResults->CommitResults();
 
@@ -459,11 +454,15 @@ bool ScriptableSpiAnalyzer::GetScriptResponse(
 }
 
 bool ScriptableSpiAnalyzer::SendOutputLine(const char* buffer, uint bufferLength) {
+	//std::cerr << ">> ";
+	//std::cerr << buffer;
 	write(outpipefd[1], buffer, bufferLength);
 }
 
 bool ScriptableSpiAnalyzer::GetInputLine(char* buffer, uint bufferLength) {
 	uint bufferPos = 0;
+
+	//std::cerr << "<< ";
 
 	while(true) {
 		int result = read(inpipefd[0], &buffer[bufferPos], 1);
@@ -471,9 +470,13 @@ bool ScriptableSpiAnalyzer::GetInputLine(char* buffer, uint bufferLength) {
 			break;
 		}
 
+		//std::cerr << buffer[bufferPos];
+
 		bufferPos++;
 	}
 	buffer[bufferPos] = '\0';
+
+	//std::cerr << '\n';
 
 	if(strlen(buffer) == 0) {
 		return false;
