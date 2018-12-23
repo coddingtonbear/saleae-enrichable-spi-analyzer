@@ -100,14 +100,12 @@ Then, open the newly created solution file located here: `build\spi_analyzer.sln
 
 See the "examples" directory for some basic examples of functional scripts.
 
-### Saleae to your script
-
 During different phases of data processing, different types of messages
 will be emitted.  All messages must be replied to with at least one
 line of output; that line may be empty if your script does not want
 to handle a given message type.
 
-#### Bubbles
+### Bubbles
 
 For each frame found by Saleae, your script will receive on stdin the following
 tab-delimited fields ending with a newline character:
@@ -137,7 +135,7 @@ IOCTL (Write)
 
 If you would not like to set a value, return an empty line.
 
-#### Markers
+### Markers
 
 For every sample point, your script will receive on stdin the following
 tab-delimited fields ending with a newline character:
@@ -191,25 +189,3 @@ and "Stop" on the fourth sample of mosi:
 ```
 
 If you would not like to set a marker on any sample, return an empty line.
-
-### Your script to Saleae
-
-For each frame, your script is expected to respond with any number of
-lines followed by an empty line; all terminated by a newline character.
-Even if your script would like no value to be displayed, an empty
-line must be written!
-
-Commands:
-
-* bubble	TEXT: Display TEXT in the bubble above this frame.
-* marker	TYPE	SAMPLE_NUMBER: Show a marker of TYPE at the specified SAMPLE_NUMBER.
-
-You can respond with any number of commands per frame.
-
-Example:
-
-```
-bubble	IOCTL Register (Write): 328
-```
-
-More commands may be added in the future.
