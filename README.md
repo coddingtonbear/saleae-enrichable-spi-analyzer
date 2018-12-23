@@ -103,9 +103,9 @@ See the "examples" directory for some basic examples of functional scripts.
 ### Saleae to your script
 
 During different phases of data processing, different types of messages
-will be emitted.  All messages expect a single line reply ending in a newline;
-not responding with at least an empty line will cause Saleae to hang
-while waiting for input!
+will be emitted.  All messages must be replied to with at least one
+line of output; that line may be empty if your script does not want
+to handle a given message type.
 
 #### Bubbles
 
