@@ -28,48 +28,62 @@ void EnrichableSpiAnalyzerResults::GenerateBubbleText( U64 frame_index, Channel&
 
 	if( ( frame.mFlags & SPI_ERROR_FLAG ) == 0 )
 	{
-		outputStream << BUBBLE_PREFIX;
-		outputStream << UNIT_SEPARATOR;
-		outputStream << std::hex << frame_index;
-		outputStream << UNIT_SEPARATOR;
-		outputStream << std::hex << frame.mStartingSampleInclusive;
-		outputStream << UNIT_SEPARATOR;
-		outputStream << std::hex << frame.mEndingSampleInclusive;
-		outputStream << UNIT_SEPARATOR;
-
-		char bubbleText[256];
-		if( channel == mSettings->mMosiChannel )
-		{
-			outputStream << MOSI_PREFIX;
+		if(mAnalyzer->featureBubble) {
+			outputStream << BUBBLE_PREFIX;
 			outputStream << UNIT_SEPARATOR;
-			outputStream << std::hex << frame.mData1;
-			outputStream << LINE_SEPARATOR;
-
-			std::string value = outputStream.str();
-			mAnalyzer->GetScriptResponse(
-				value.c_str(),
-				value.length(),
-				bubbleText,
-				256
-			);
-		}
-		else
-		{
-			outputStream << MISO_PREFIX;
+			outputStream << std::hex << frame_index;
 			outputStream << UNIT_SEPARATOR;
-			outputStream << std::hex << frame.mData2;
-			outputStream << LINE_SEPARATOR;
+			outputStream << std::hex << frame.mStartingSampleInclusive;
+			outputStream << UNIT_SEPARATOR;
+			outputStream << std::hex << frame.mEndingSampleInclusive;
+			outputStream << UNIT_SEPARATOR;
 
-			std::string value = outputStream.str();
-			mAnalyzer->GetScriptResponse(
-				value.c_str(),
-				value.length(),
-				bubbleText,
-				256
-			);
-		}
-		if(strlen(bubbleText) > 0) {
-			AddResultString(bubbleText);
+			char bubbleText[256];
+			if( channel == mSettings->mMosiChannel )
+			{
+				outputStream << MOSI_PREFIX;
+				outputStream << UNIT_SEPARATOR;
+				outputStream << std::hex << frame.mData1;
+				outputStream << LINE_SEPARATOR;
+
+				std::string value = outputStream.str();
+				mAnalyzer->GetScriptResponse(
+					value.c_str(),
+					value.length(),
+					bubbleText,
+					256
+				);
+			}
+			else
+			{
+				outputStream << MISO_PREFIX;
+				outputStream << UNIT_SEPARATOR;
+				outputStream << std::hex << frame.mData2;
+				outputStream << LINE_SEPARATOR;
+
+				std::string value = outputStream.str();
+				mAnalyzer->GetScriptResponse(
+					value.c_str(),
+					value.length(),
+					bubbleText,
+					256
+				);
+			}
+			if(strlen(bubbleText) > 0) {
+				AddResultString(bubbleText);
+			}
+		} else {
+			if( channel == mSettings->mMosiChannel )
+			{
+				char number_str[128];
+				AnalyzerHelpers::GetNumberString( frame.mData1, display_base, mSettings->mBitsPerTransfer, number_str, 128 );
+				AddResultString( number_str );
+			}else
+			{
+				char number_str[128];
+				AnalyzerHelpers::GetNumberString( frame.mData2, display_base, mSettings->mBitsPerTransfer, number_str, 128 );
+				AddResultString( number_str );
+			}
 		}
 	}else
 	{
@@ -144,32 +158,76 @@ void EnrichableSpiAnalyzerResults::GenerateFrameTabularText( U64 frame_index, Di
 	ClearTabularText();
 	Frame frame = GetFrame( frame_index );
 
-	std::stringstream outputStream;
+	if(mAnalyzer->featureTabular) {
+		std::stringstream outputStream;
 
-	outputStream << TABULAR_PREFIX;
-	outputStream << UNIT_SEPARATOR;
-	outputStream << std::hex << frame_index;
-	outputStream << UNIT_SEPARATOR;
-	outputStream << std::hex << frame.mStartingSampleInclusive;
-	outputStream << UNIT_SEPARATOR;
-	outputStream << std::hex << frame.mEndingSampleInclusive;
-	outputStream << UNIT_SEPARATOR;
-	outputStream << std::hex << frame.mData1;
-	outputStream << UNIT_SEPARATOR;
-	outputStream << std::hex << frame.mData2;
-	outputStream << LINE_SEPARATOR;
+		outputStream << TABULAR_PREFIX;
+		outputStream << UNIT_SEPARATOR;
+		outputStream << std::hex << frame_index;
+		outputStream << UNIT_SEPARATOR;
+		outputStream << std::hex << frame.mStartingSampleInclusive;
+		outputStream << UNIT_SEPARATOR;
+		outputStream << std::hex << frame.mEndingSampleInclusive;
+		outputStream << UNIT_SEPARATOR;
+		outputStream << std::hex << frame.mData1;
+		outputStream << UNIT_SEPARATOR;
+		outputStream << std::hex << frame.mData2;
+		outputStream << LINE_SEPARATOR;
 
-	std::string value = outputStream.str();
-	char tabularText[512];
-	mAnalyzer->GetScriptResponse(
-		value.c_str(),
-		value.length(),
-		tabularText,
-		512
-	);
+		std::string value = outputStream.str();
+		char tabularText[512];
+		mAnalyzer->GetScriptResponse(
+			value.c_str(),
+			value.length(),
+			tabularText,
+			512
+		);
 
-	if(strlen(tabularText) > 0) {
-		AddTabularText(tabularText);
+		if(strlen(tabularText) > 0) {
+			AddTabularText(tabularText);
+		}
+	} else {
+		bool mosi_used = true;
+		bool miso_used = true;
+
+		if( mSettings->mMosiChannel == UNDEFINED_CHANNEL )
+			mosi_used = false;
+
+		if( mSettings->mMisoChannel == UNDEFINED_CHANNEL )
+			miso_used = false;
+
+		char mosi_str[128];
+		char miso_str[128];
+
+		std::stringstream ss;
+
+		if( ( frame.mFlags & SPI_ERROR_FLAG ) == 0 )
+		{
+			if( mosi_used == true )
+				AnalyzerHelpers::GetNumberString( frame.mData1, display_base, mSettings->mBitsPerTransfer, mosi_str, 128 );
+			if( miso_used == true )
+				AnalyzerHelpers::GetNumberString( frame.mData2, display_base, mSettings->mBitsPerTransfer, miso_str, 128 );
+
+			if( mosi_used == true && miso_used == true )
+			{
+				ss << "MOSI: " << mosi_str << ";  MISO: " << miso_str;
+			}else
+			{
+				if( mosi_used == true )
+				{
+					ss << "MOSI: " << mosi_str;
+				}else
+				{
+					ss << "MISO: " << miso_str;
+				}
+			}
+		}
+		else
+		{
+			ss << "The initial (idle) state of the CLK line does not match the settings.";
+		}
+
+		AddTabularText( ss.str().c_str() );
 	}
 }
 

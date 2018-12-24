@@ -7,6 +7,8 @@ from saleae_enrichable_spi_analyzer import (
 
 
 class SC16IS7xxAnalyzer(EnrichableSpiAnalyzer):
+    ENABLE_MARKER = False
+
     CHANNEL_NAMES = {
         0b00: 'A',
         0b01: 'B',

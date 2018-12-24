@@ -231,6 +231,34 @@ and "Stop" on the fourth sample of mosi:
 
 If you would not like to set a marker on any sample, return an empty line.
 
+### Feature (Enablement)
+
+For either performance reasons or expediency, you might want to receive messages of only certain types.
+Upon launching your script, your script will be given the opportunity to disable specific message types by repsonding appropriately.
+
+For message types that can be disabled by this analyzer, your script will recieve the following tab-delimited fields ending with a newline character:
+
+* "feature"
+* "bubble", "marker", or "tabular"
+
+To prevent messages of the indicated type from being generated and sent by the analyzer, you can respond with "no"; responding with any other value (including an empty line) indicates that messages of that type should continue to be generated and sent.
+
+For example, if your script does not intend to add markers; you can improve performance by disabling markers.
+To do that, when you receive the following message:
+
+```
+feature marker
+```
+
+respond with:
+
+```
+no
+```
+
+Features that are disabled will revert to the standard SPI Analyzer implementation of that feature.
+
+Even if you intend to support only a subset of features, it is important that your script continue to respond with an empty newline when receiving an unexpected message -- new message types may be added at any time!
 
 ## Python Module
 
@@ -309,5 +337,15 @@ The following methods can be implemented for interacting with Saleae Logic:
 * `get_tabular(frame_index, start_sample, end_sample, mosi_value, miso_value)`:
   Data to display in the tabular "Decoded Protocols" section.
   By default, uses the bubble text for each channel.
+
+To improve performance, you are also able to disable messages of specific types
+by setting the following class-level boolean values:
+
+* `ENABLE_MARKER`; setting this to false will instruct Saleae Logic to not
+  send `marker` messages to your script.
+* `ENABLE_BUBBLE`; setting this to false will instruct Saleae Logic to not
+  send `bubble` messages to your script.
+* `ENABLE_TABULAR`; setting this to false will instruct Saleae Logic to not
+  send `tabular` messages to your script.
 
 See the example `custom_class.py` for an example of this in use.

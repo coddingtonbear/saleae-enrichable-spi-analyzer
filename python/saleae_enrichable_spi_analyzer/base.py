@@ -35,6 +35,12 @@ class MarkerType(enum.Enum):
     Dot = 11
 
 
+class MessageType(enum.Enum):
+    bubble = 0
+    marker = 1
+    tabular = 2
+
+
 class Marker(object):
     def __init__(self, idx: int, direction: Channel, marker_type: MarkerType):
         self._idx = idx
@@ -50,10 +56,26 @@ class Marker(object):
 
 
 class EnrichableSpiAnalyzer(object):
+    ENABLE_MARKER = True
+    ENABLE_BUBBLE = True
+    ENABLE_TABULAR = True
+
     def __init__(self, *args):
         self.args = args
 
         super(EnrichableSpiAnalyzer, self).__init__()
+
+    def get_enabled_message_types(self):
+        features = set()
+
+        if self.ENABLE_MARKER:
+            features.append(MessageType.marker)
+        if self.ENABLE_BUBBLE:
+            features.append(MessageType.bubble)
+        if self.ENABLE_TABULAR:
+            features.append(MessageType.tabular)
+
+        return features
 
     def get_bubble_text(
         self,
@@ -168,6 +190,8 @@ class EnrichableSpiAnalyzer(object):
         instance.run_forever()
 
     def run_forever(self):
+        enabled_features = self.get_enabled_message_types()
+
         for line in fileinput.input('-'):
             line = line.strip()
 
@@ -211,6 +235,18 @@ class EnrichableSpiAnalyzer(object):
                 )
                 if result:
                     output_line = str(result)
+            elif line.startswith('feature\t'):
+                _, name = line.split("\t")
+
+                result = False
+                try:
+                    message_type = MessageType[name]
+                    if message_type in enabled_features:
+                        result = True
+                except KeyError:
+                    pass
+
+                output_line = 'yes' if result else 'no'
 
             logger.debug("<< %s", output_line)
 

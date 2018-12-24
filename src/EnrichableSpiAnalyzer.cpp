@@ -30,7 +30,10 @@ EnrichableSpiAnalyzer::EnrichableSpiAnalyzer()
 	mMosi( NULL ),
 	mMiso( NULL ),
 	mClock( NULL ),
-	mEnable( NULL )
+	mEnable( NULL ),
+	featureMarker(true),
+	featureBubble(true),
+	featureTabular(true)
 {	
 	SetAnalyzerSettings( mSettings.get() );
 }
@@ -112,6 +115,19 @@ void EnrichableSpiAnalyzer::WorkerThread()
 		close(outpipefd[0]);
 	}
 
+	// Check script to see which features are enabled;
+	// * 'no': This feature can be skipped.  This is used to improve
+	//   performance by allowing the script to not receive messages for
+	//   features it does not support.
+	// * 'yes': Send messages of this type.
+	// * Anything else: Send messages of this type.  This might be surprising,
+	//   but it's more important to me that the default case be simple
+	//   than the default case be high-performance.   Scripts are expected
+	//   to respond to even unhandled messages.
+	featureBubble = GetFeatureEnablement(BUBBLE_PREFIX);
+	featureMarker = GetFeatureEnablement(MARKER_PREFIX);
+	featureTabular = GetFeatureEnablement(TABULAR_PREFIX);
+
 	for( ; ; )
 	{
 		GetWord();
@@ -122,6 +138,35 @@ void EnrichableSpiAnalyzer::WorkerThread()
 	close(outpipefd[1]);
 
 	kill(commandPid, SIGINT);
+}
+
+bool EnrichableSpiAnalyzer::GetFeatureEnablement(const char* feature) {
+	std::stringstream outputStream;
+	char result[16];
+	std::string value;
+
+	outputStream << FEATURE_PREFIX;
+	outputStream << UNIT_SEPARATOR;
+	outputStream << feature;
+	outputStream << LINE_SEPARATOR;
+	value = outputStream.str();
+
+	GetScriptResponse(
+		value.c_str(),
+		value.length(),
+		result,
+		16
+	);
+	std::cerr << value;
+	std::cerr << "\n";
+	std::cerr << feature;
+	std::cerr << " ";
+	std::cerr << result;
+	std::cerr << "\n";
+	if(strcmp(result, "no") == 0) {
+		return false;
+	}
+	return true;
 }
 
 void EnrichableSpiAnalyzer::AdvanceToActiveEnableEdgeWithCorrectClockPolarity()
@@ -364,70 +409,72 @@ void EnrichableSpiAnalyzer::GetWord()
 		);
 	}
 
-	std::stringstream outputStream;
+	if(featureMarker) {
+		std::stringstream outputStream;
 
-	outputStream << MARKER_PREFIX;
-	outputStream << UNIT_SEPARATOR;
-	outputStream << std::hex << frame_index;
-	outputStream << UNIT_SEPARATOR;
-	outputStream << std::hex << count;
-	outputStream << UNIT_SEPARATOR;
-	outputStream << std::hex << result_frame.mStartingSampleInclusive;
-	outputStream << UNIT_SEPARATOR;
-	outputStream << std::hex << result_frame.mEndingSampleInclusive;
-	outputStream << UNIT_SEPARATOR;
-	outputStream << std::hex << mosi_word;
-	outputStream << UNIT_SEPARATOR;
-	outputStream << std::hex << miso_word;
-	outputStream << LINE_SEPARATOR;
+		outputStream << MARKER_PREFIX;
+		outputStream << UNIT_SEPARATOR;
+		outputStream << std::hex << frame_index;
+		outputStream << UNIT_SEPARATOR;
+		outputStream << std::hex << count;
+		outputStream << UNIT_SEPARATOR;
+		outputStream << std::hex << result_frame.mStartingSampleInclusive;
+		outputStream << UNIT_SEPARATOR;
+		outputStream << std::hex << result_frame.mEndingSampleInclusive;
+		outputStream << UNIT_SEPARATOR;
+		outputStream << std::hex << mosi_word;
+		outputStream << UNIT_SEPARATOR;
+		outputStream << std::hex << miso_word;
+		outputStream << LINE_SEPARATOR;
 
-	std::string outputValue = outputStream.str();
+		std::string outputValue = outputStream.str();
 
-	subprocessLock.lock();
-	SendOutputLine(
-		outputValue.c_str(),
-		outputValue.length()
-	);
-	char markerMessage[256];
-	while(true) {
-		GetInputLine(
-			markerMessage,
-			256
+		subprocessLock.lock();
+		SendOutputLine(
+			outputValue.c_str(),
+			outputValue.length()
 		);
-		if(strlen(markerMessage) > 0) {
-			char forever[256];
-			strcpy(forever, markerMessage);
+		char markerMessage[256];
+		while(true) {
+			GetInputLine(
+				markerMessage,
+				256
+			);
+			if(strlen(markerMessage) > 0) {
+				char forever[256];
+				strcpy(forever, markerMessage);
 
-			char *sampleNumberStr = strtok(markerMessage, "\t");
-			char *channelStr = strtok(NULL, "\t");
-			char *markerTypeStr = strtok(NULL, "\t");
+				char *sampleNumberStr = strtok(markerMessage, "\t");
+				char *channelStr = strtok(NULL, "\t");
+				char *markerTypeStr = strtok(NULL, "\t");
 
-			if(sampleNumberStr != NULL && channelStr != NULL && markerTypeStr != NULL) {
-				U64 sampleNumber = strtoll(sampleNumberStr, NULL, 16);
-				Channel* channel = NULL;
-				if(strcmp(channelStr, "mosi") == 0) {
-					channel = &mSettings->mMosiChannel;
-				} else if (strcmp(channelStr, "miso") == 0) {
-					channel = &mSettings->mMisoChannel;
-				}
-				if(channel != NULL) {
-					mResults->AddMarker(
-						mArrowLocations[sampleNumber],
-						GetMarkerType(markerTypeStr, strlen(markerTypeStr)),
-						*channel
-					);
+				if(sampleNumberStr != NULL && channelStr != NULL && markerTypeStr != NULL) {
+					U64 sampleNumber = strtoll(sampleNumberStr, NULL, 16);
+					Channel* channel = NULL;
+					if(strcmp(channelStr, "mosi") == 0) {
+						channel = &mSettings->mMosiChannel;
+					} else if (strcmp(channelStr, "miso") == 0) {
+						channel = &mSettings->mMisoChannel;
+					}
+					if(channel != NULL) {
+						mResults->AddMarker(
+							mArrowLocations[sampleNumber],
+							GetMarkerType(markerTypeStr, strlen(markerTypeStr)),
+							*channel
+						);
+					}
+				} else {
+					std::cerr << "Unable to tokenize marker message input: \"";
+					std::cerr << forever;
+					std::cerr << "\"; input should be three tab-delimited fields: ";
+					std::cerr << "sample_number\tchannel\tmarker_type\n";
 				}
 			} else {
-				std::cerr << "Unable to tokenize marker message input: \"";
-				std::cerr << forever;
-				std::cerr << "\"; input should be three tab-delimited fields: ";
-				std::cerr << "sample_number\tchannel\tmarker_type\n";
+				break;
 			}
-		} else {
-			break;
 		}
+		subprocessLock.unlock();
 	}
-	subprocessLock.unlock();
 	
 	mResults->CommitResults();
 

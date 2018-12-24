@@ -8,6 +8,7 @@
 #define BUBBLE_PREFIX "bubble"
 #define MARKER_PREFIX "marker"
 #define TABULAR_PREFIX "tabular"
+#define FEATURE_PREFIX "feature"
 
 #define MOSI_PREFIX "mosi"
 #define MISO_PREFIX "miso"
@@ -37,7 +38,12 @@ public:
 		char* inBuffer,
 		uint inBufferLength
 	);
+	bool GetFeatureEnablement(const char* feature);
 	AnalyzerResults::MarkerType GetMarkerType(char* buffer, uint bufferLength);
+
+	bool featureMarker;
+	bool featureBubble;
+	bool featureTabular;
 
 protected: //functions
 	bool SendOutputLine(const char* buffer, uint bufferLength);
