@@ -1,12 +1,12 @@
 import sys
 from typing import List
 
-from saleae_scriptable_spi_analyzer import (
-    ScriptableSpiAnalyzer, Channel, Marker, MarkerType
+from saleae_enrichable_spi_analyzer import (
+    EnrichableSpiAnalyzer, Channel, Marker, MarkerType
 )
 
 
-class SC16IS7xxAnalyzer(ScriptableSpiAnalyzer):
+class SC16IS7xxAnalyzer(EnrichableSpiAnalyzer):
     CHANNEL_NAMES = {
         0b00: 'A',
         0b01: 'B',

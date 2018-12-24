@@ -1,4 +1,4 @@
-# Scriptable SPI Analyzer for Saleae Logic
+# Enrichable SPI Analyzer for Saleae Logic
 
 The built-in SPI Analyzer for the Saleae Logic provides you with only a
 few basic options for how to display the transferred bytes -- as ascii text,
@@ -8,7 +8,7 @@ even more likely, stores multiple values in each byte that will require you
 to either do the math in your head or export the data for post-processing?
 Isn't that really the sort of thing computers are great at doing, though?
 
-This "Scriptable" SPI analyzer allows you to define a simple external script
+This "Enrichable" SPI analyzer allows you to define a simple external script
 to execute that can provide its own values to display for each SPI frame;
 you won't have to do the math in your head anymore!
 
@@ -108,7 +108,7 @@ desire to handle the received message type.
 
 ### Bubbles
 
-![Bubbles](https://s3-us-west-2.amazonaws.com/coddingtonbear-public/github/saleae-scriptable-spi-analyzer/bubbles_2.png)
+![Bubbles](https://s3-us-west-2.amazonaws.com/coddingtonbear-public/github/saleae-enrichable-spi-analyzer/bubbles_2.png)
 
 For each frame found by Saleae, your script will receive on stdin the following
 tab-delimited fields ending with a newline character:
@@ -140,7 +140,7 @@ If you would not like to set a value, return an empty line.
 
 ### Tabular
 
-![Tabular](https://s3-us-west-2.amazonaws.com/coddingtonbear-public/github/saleae-scriptable-spi-analyzer/tabular_2.png)
+![Tabular](https://s3-us-west-2.amazonaws.com/coddingtonbear-public/github/saleae-enrichable-spi-analyzer/tabular_2.png)
 
 For each frame found by Saleae, your script will receive on stdin the
 following tab-delimited fields ending with a newline character:
@@ -172,7 +172,7 @@ If you would not like to set a value, return an empty line.
 
 ### Markers
 
-![Markers](https://s3-us-west-2.amazonaws.com/coddingtonbear-public/github/saleae-scriptable-spi-analyzer/markers_3.png)
+![Markers](https://s3-us-west-2.amazonaws.com/coddingtonbear-public/github/saleae-enrichable-spi-analyzer/markers_3.png)
 
 For every sample point, your script will receive on stdin the following
 tab-delimited fields ending with a newline character:
@@ -248,18 +248,18 @@ pip install .
 ### Use
 
 Using this is as simple as creating your own module somewhere that subclasses
-`saleae_scriptable_spi_analyzer.ScriptableSpiAnalyzer` with methods for the
+`saleae_enrichable_spi_analyzer.EnrichableSpiAnalyzer` with methods for the
 features you'd like to use; here is a basic example:
 
 ```python
 import sys
 
-from saleae_scriptable_spi_analyzer import (
-    ScriptableSpiAnalyzer, Channel, Marker, MarkerType
+from saleae_enrichable_spi_analyzer import (
+    EnrichableSpiAnalyzer, Channel, Marker, MarkerType
 )
 
 
-class MySimpleAnalyzer(ScriptableSpiAnalyzer):
+class MySimpleAnalyzer(EnrichableSpiAnalyzer):
     def get_bubble_text(
         self,
         frame_index: int,

@@ -1,4 +1,4 @@
-#include "ScriptableSpiAnalyzerSettings.h"
+#include "EnrichableSpiAnalyzerSettings.h"
 
 #include <AnalyzerHelpers.h>
 #include <sstream>
@@ -7,7 +7,7 @@
 #include <iostream>
 #include <fstream>
 
-ScriptableSpiAnalyzerSettings::ScriptableSpiAnalyzerSettings()
+EnrichableSpiAnalyzerSettings::EnrichableSpiAnalyzerSettings()
 :	mMosiChannel( UNDEFINED_CHANNEL ),
 	mMisoChannel( UNDEFINED_CHANNEL ),
 	mClockChannel( UNDEFINED_CHANNEL ),
@@ -78,7 +78,7 @@ ScriptableSpiAnalyzerSettings::ScriptableSpiAnalyzerSettings()
 	mEnableActiveStateInterface->SetNumber( mEnableActiveState );
 
 	mParserCommandInterface.reset(new AnalyzerSettingInterfaceText());
-	mParserCommandInterface->SetTitleAndTooltip("Parser Command", "Command to run for parsing SPI data.");
+	mParserCommandInterface->SetTitleAndTooltip("Enrichment Script", "Command to run for enriching displayed SPI data.");
 	mParserCommandInterface->SetTextType(AnalyzerSettingInterfaceText::NormalText);
 	mParserCommandInterface->SetText(mParserCommand);
 
@@ -107,11 +107,11 @@ ScriptableSpiAnalyzerSettings::ScriptableSpiAnalyzerSettings()
 	AddChannel( mEnableChannel, "ENABLE", false );
 }
 
-ScriptableSpiAnalyzerSettings::~ScriptableSpiAnalyzerSettings()
+EnrichableSpiAnalyzerSettings::~EnrichableSpiAnalyzerSettings()
 {
 }
 
-bool ScriptableSpiAnalyzerSettings::SetSettingsFromInterfaces()
+bool EnrichableSpiAnalyzerSettings::SetSettingsFromInterfaces()
 {
 	Channel mosi = mMosiChannelInterface->GetChannel();
 	Channel miso = mMisoChannelInterface->GetChannel();
@@ -157,15 +157,15 @@ bool ScriptableSpiAnalyzerSettings::SetSettingsFromInterfaces()
 	return true;
 }
 
-void ScriptableSpiAnalyzerSettings::LoadSettings( const char* settings )
+void EnrichableSpiAnalyzerSettings::LoadSettings( const char* settings )
 {
 	SimpleArchive text_archive;
 	text_archive.SetString( settings );
 
 	const char* name_string;	//the first thing in the archive is the name of the protocol analyzer that the data belongs to.
 	text_archive >> &name_string;
-	if( strcmp( name_string, "SaleaeScriptableSpiAnalyzer" ) != 0 )
-		AnalyzerHelpers::Assert( "SaleaeScriptableSpiAnalyzer: Provided with a settings string that doesn't belong to us;" );
+	if( strcmp( name_string, "SaleaeEnrichableSpiAnalyzer" ) != 0 )
+		AnalyzerHelpers::Assert( "SaleaeEnrichableSpiAnalyzer: Provided with a settings string that doesn't belong to us;" );
 
 	text_archive >>  mMosiChannel;
 	text_archive >>  mMisoChannel;
@@ -191,11 +191,11 @@ void ScriptableSpiAnalyzerSettings::LoadSettings( const char* settings )
 	UpdateInterfacesFromSettings();
 }
 
-const char* ScriptableSpiAnalyzerSettings::SaveSettings()
+const char* EnrichableSpiAnalyzerSettings::SaveSettings()
 {
 	SimpleArchive text_archive;
 
-	text_archive << "SaleaeScriptableSpiAnalyzer";
+	text_archive << "SaleaeEnrichableSpiAnalyzer";
 	text_archive <<  mMosiChannel;
 	text_archive <<  mMisoChannel;
 	text_archive <<  mClockChannel;
@@ -210,7 +210,7 @@ const char* ScriptableSpiAnalyzerSettings::SaveSettings()
 	return SetReturnString( text_archive.GetString() );
 }
 
-void ScriptableSpiAnalyzerSettings::UpdateInterfacesFromSettings()
+void EnrichableSpiAnalyzerSettings::UpdateInterfacesFromSettings()
 {
 	mMosiChannelInterface->SetChannel( mMosiChannel );
 	mMisoChannelInterface->SetChannel( mMisoChannel );

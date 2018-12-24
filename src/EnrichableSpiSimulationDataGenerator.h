@@ -3,19 +3,19 @@
 
 #include <AnalyzerHelpers.h>
 
-class ScriptableSpiAnalyzerSettings;
+class EnrichableSpiAnalyzerSettings;
 
-class ScriptableSpiSimulationDataGenerator
+class EnrichableSpiSimulationDataGenerator
 {
 public:
-	ScriptableSpiSimulationDataGenerator();
-	~ScriptableSpiSimulationDataGenerator();
+	EnrichableSpiSimulationDataGenerator();
+	~EnrichableSpiSimulationDataGenerator();
 
-	void Initialize( U32 simulation_sample_rate, ScriptableSpiAnalyzerSettings* settings );
+	void Initialize( U32 simulation_sample_rate, EnrichableSpiAnalyzerSettings* settings );
 	U32 GenerateSimulationData( U64 newest_sample_requested, U32 sample_rate, SimulationChannelDescriptor** simulation_channels );
 
 protected:
-	ScriptableSpiAnalyzerSettings* mSettings;
+	EnrichableSpiAnalyzerSettings* mSettings;
 	U32 mSimulationSampleRateHz;
 	U64 mValue;
 
@@ -27,7 +27,7 @@ protected: //SPI specific
 	void OutputWord_CPHA1( U64 mosi_data, U64 miso_data );
 
 
-	SimulationChannelDescriptorGroup mScriptableSpiSimulationChannels;
+	SimulationChannelDescriptorGroup mEnrichableSpiSimulationChannels;
 	SimulationChannelDescriptor* mMiso;
 	SimulationChannelDescriptor* mMosi;
 	SimulationChannelDescriptor* mClock;

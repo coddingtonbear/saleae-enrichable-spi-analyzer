@@ -2,8 +2,8 @@
 #define SPI_ANALYZER_H
 
 #include <Analyzer.h>
-#include "ScriptableSpiAnalyzerResults.h"
-#include "ScriptableSpiSimulationDataGenerator.h"
+#include "EnrichableSpiAnalyzerResults.h"
+#include "EnrichableSpiSimulationDataGenerator.h"
 
 #define BUBBLE_PREFIX "bubble"
 #define MARKER_PREFIX "marker"
@@ -15,12 +15,12 @@
 #define UNIT_SEPARATOR '\t'
 #define LINE_SEPARATOR '\n'
 
-class ScriptableSpiAnalyzerSettings;
-class ScriptableSpiAnalyzer : public Analyzer2
+class EnrichableSpiAnalyzerSettings;
+class EnrichableSpiAnalyzer : public Analyzer2
 {
 public:
-	ScriptableSpiAnalyzer();
-	virtual ~ScriptableSpiAnalyzer();
+	EnrichableSpiAnalyzer();
+	virtual ~EnrichableSpiAnalyzer();
 	virtual void SetupResults();
 	virtual void WorkerThread();
 
@@ -53,10 +53,10 @@ protected: //functions
 #pragma warning( push )
 #pragma warning( disable : 4251 ) //warning C4251: 'SerialAnalyzer::<...>' : class <...> needs to have dll-interface to be used by clients of class
 protected:  //vars
-	std::auto_ptr< ScriptableSpiAnalyzerSettings > mSettings;
-	std::auto_ptr< ScriptableSpiAnalyzerResults > mResults;
+	std::auto_ptr< EnrichableSpiAnalyzerSettings > mSettings;
+	std::auto_ptr< EnrichableSpiAnalyzerResults > mResults;
 	bool mSimulationInitilized;
-	ScriptableSpiSimulationDataGenerator mSimulationDataGenerator;
+	EnrichableSpiSimulationDataGenerator mSimulationDataGenerator;
 
 	AnalyzerChannelData* mMosi; 
 	AnalyzerChannelData* mMiso;

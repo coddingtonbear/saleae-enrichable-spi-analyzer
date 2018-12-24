@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 __all__ = [
-    'Channel', 'MarkerType', 'Marker', 'ScriptableSpiAnalyzer'
+    'Channel', 'MarkerType', 'Marker', 'EnrichableSpiAnalyzer'
 ]
 
 
@@ -49,11 +49,11 @@ class Marker(object):
         )
 
 
-class ScriptableSpiAnalyzer(object):
+class EnrichableSpiAnalyzer(object):
     def __init__(self, *args):
         self.args = args
 
-        super(ScriptableSpiAnalyzer, self).__init__()
+        super(EnrichableSpiAnalyzer, self).__init__()
 
     def get_bubble_text(
         self,

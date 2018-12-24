@@ -1,25 +1,25 @@
-#include "ScriptableSpiAnalyzerResults.h"
+#include "EnrichableSpiAnalyzerResults.h"
 #include <AnalyzerHelpers.h>
-#include "ScriptableSpiAnalyzer.h"
-#include "ScriptableSpiAnalyzerSettings.h"
+#include "EnrichableSpiAnalyzer.h"
+#include "EnrichableSpiAnalyzerSettings.h"
 
 #include <iostream>
 #include <sstream>
 
 #pragma warning(disable: 4996) //warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead.
 
-ScriptableSpiAnalyzerResults::ScriptableSpiAnalyzerResults( ScriptableSpiAnalyzer* analyzer, ScriptableSpiAnalyzerSettings* settings )
+EnrichableSpiAnalyzerResults::EnrichableSpiAnalyzerResults( EnrichableSpiAnalyzer* analyzer, EnrichableSpiAnalyzerSettings* settings )
 :	AnalyzerResults(),
 	mSettings( settings ),
 	mAnalyzer( analyzer )
 {
 }
 
-ScriptableSpiAnalyzerResults::~ScriptableSpiAnalyzerResults()
+EnrichableSpiAnalyzerResults::~EnrichableSpiAnalyzerResults()
 {
 }
 
-void ScriptableSpiAnalyzerResults::GenerateBubbleText( U64 frame_index, Channel& channel, DisplayBase display_base )  //unrefereced vars commented out to remove warnings.
+void EnrichableSpiAnalyzerResults::GenerateBubbleText( U64 frame_index, Channel& channel, DisplayBase display_base )  //unrefereced vars commented out to remove warnings.
 {
 	ClearResultStrings();
 	Frame frame = GetFrame( frame_index );
@@ -79,7 +79,7 @@ void ScriptableSpiAnalyzerResults::GenerateBubbleText( U64 frame_index, Channel&
 	}
 }
 
-void ScriptableSpiAnalyzerResults::GenerateExportFile( const char* file, DisplayBase display_base, U32 /*export_type_user_id*/ )
+void EnrichableSpiAnalyzerResults::GenerateExportFile( const char* file, DisplayBase display_base, U32 /*export_type_user_id*/ )
 {
 	//export_type_user_id is only important if we have more than one export type.
 
@@ -139,7 +139,7 @@ void ScriptableSpiAnalyzerResults::GenerateExportFile( const char* file, Display
 	AnalyzerHelpers::EndFile( f );
 }
 
-void ScriptableSpiAnalyzerResults::GenerateFrameTabularText( U64 frame_index, DisplayBase display_base )
+void EnrichableSpiAnalyzerResults::GenerateFrameTabularText( U64 frame_index, DisplayBase display_base )
 {
 	ClearTabularText();
 	Frame frame = GetFrame( frame_index );
@@ -173,13 +173,13 @@ void ScriptableSpiAnalyzerResults::GenerateFrameTabularText( U64 frame_index, Di
 	}
 }
 
-void ScriptableSpiAnalyzerResults::GeneratePacketTabularText( U64 /*packet_id*/, DisplayBase /*display_base*/ )  //unrefereced vars commented out to remove warnings.
+void EnrichableSpiAnalyzerResults::GeneratePacketTabularText( U64 /*packet_id*/, DisplayBase /*display_base*/ )  //unrefereced vars commented out to remove warnings.
 {
 	ClearResultStrings();
 	AddResultString( "not supported" );
 }
 
-void ScriptableSpiAnalyzerResults::GenerateTransactionTabularText( U64 /*transaction_id*/, DisplayBase /*display_base*/ )  //unrefereced vars commented out to remove warnings.
+void EnrichableSpiAnalyzerResults::GenerateTransactionTabularText( U64 /*transaction_id*/, DisplayBase /*display_base*/ )  //unrefereced vars commented out to remove warnings.
 {
 	ClearResultStrings();
 	AddResultString( "not supported" );

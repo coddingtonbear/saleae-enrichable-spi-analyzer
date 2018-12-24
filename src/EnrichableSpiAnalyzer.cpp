@@ -1,6 +1,6 @@
 
-#include "ScriptableSpiAnalyzer.h"
-#include "ScriptableSpiAnalyzerSettings.h"
+#include "EnrichableSpiAnalyzer.h"
+#include "EnrichableSpiAnalyzerSettings.h"
 #include <AnalyzerChannelData.h>
 
 #include <iostream>
@@ -23,9 +23,9 @@
 
 std::mutex subprocessLock;
 
-ScriptableSpiAnalyzer::ScriptableSpiAnalyzer()
+EnrichableSpiAnalyzer::EnrichableSpiAnalyzer()
 :	Analyzer2(),
-	mSettings( new ScriptableSpiAnalyzerSettings() ),
+	mSettings( new EnrichableSpiAnalyzerSettings() ),
 	mSimulationInitilized( false ),
 	mMosi( NULL ),
 	mMiso( NULL ),
@@ -35,14 +35,14 @@ ScriptableSpiAnalyzer::ScriptableSpiAnalyzer()
 	SetAnalyzerSettings( mSettings.get() );
 }
 
-ScriptableSpiAnalyzer::~ScriptableSpiAnalyzer()
+EnrichableSpiAnalyzer::~EnrichableSpiAnalyzer()
 {
 	KillThread();
 }
 
-void ScriptableSpiAnalyzer::SetupResults()
+void EnrichableSpiAnalyzer::SetupResults()
 {
-	mResults.reset( new ScriptableSpiAnalyzerResults( this, mSettings.get() ) );
+	mResults.reset( new EnrichableSpiAnalyzerResults( this, mSettings.get() ) );
 	SetAnalyzerResults( mResults.get() );
 
 	if( mSettings->mMosiChannel != UNDEFINED_CHANNEL )
@@ -51,7 +51,7 @@ void ScriptableSpiAnalyzer::SetupResults()
 		mResults->AddChannelBubblesWillAppearOn( mSettings->mMisoChannel );
 }
 
-void ScriptableSpiAnalyzer::WorkerThread()
+void EnrichableSpiAnalyzer::WorkerThread()
 {
 	Setup();
 
@@ -124,7 +124,7 @@ void ScriptableSpiAnalyzer::WorkerThread()
 	kill(commandPid, SIGINT);
 }
 
-void ScriptableSpiAnalyzer::AdvanceToActiveEnableEdgeWithCorrectClockPolarity()
+void EnrichableSpiAnalyzer::AdvanceToActiveEnableEdgeWithCorrectClockPolarity()
 {
 	mResults->CommitPacketAndStartNewPacket();
 	mResults->CommitResults();
@@ -138,7 +138,7 @@ void ScriptableSpiAnalyzer::AdvanceToActiveEnableEdgeWithCorrectClockPolarity()
 	}
 }
 
-void ScriptableSpiAnalyzer::Setup()
+void EnrichableSpiAnalyzer::Setup()
 {
 	bool allow_last_trailing_clock_edge_to_fall_outside_enable = false;
 	if( mSettings->mDataValidEdge == AnalyzerEnums::LeadingEdge )
@@ -180,7 +180,7 @@ void ScriptableSpiAnalyzer::Setup()
 
 }
 
-void ScriptableSpiAnalyzer::AdvanceToActiveEnableEdge()
+void EnrichableSpiAnalyzer::AdvanceToActiveEnableEdge()
 {
 	if( mEnable != NULL )
 	{
@@ -200,7 +200,7 @@ void ScriptableSpiAnalyzer::AdvanceToActiveEnableEdge()
 	}
 }
 
-bool ScriptableSpiAnalyzer::IsInitialClockPolarityCorrect()
+bool EnrichableSpiAnalyzer::IsInitialClockPolarityCorrect()
 {
 	if( mClock->GetBitState() == mSettings->mClockInactiveState )
 		return true;
@@ -235,7 +235,7 @@ bool ScriptableSpiAnalyzer::IsInitialClockPolarityCorrect()
 	}
 }
 
-bool ScriptableSpiAnalyzer::WouldAdvancingTheClockToggleEnable()
+bool EnrichableSpiAnalyzer::WouldAdvancingTheClockToggleEnable()
 {
 	if( mEnable == NULL )
 		return false;
@@ -249,7 +249,7 @@ bool ScriptableSpiAnalyzer::WouldAdvancingTheClockToggleEnable()
 		return true;
 }
 
-void ScriptableSpiAnalyzer::GetWord()
+void EnrichableSpiAnalyzer::GetWord()
 {
 	//we're assuming we come into this function with the clock in the idle state;
 
@@ -435,7 +435,7 @@ void ScriptableSpiAnalyzer::GetWord()
 		AdvanceToActiveEnableEdgeWithCorrectClockPolarity();
 }
 
-bool ScriptableSpiAnalyzer::GetScriptResponse(
+bool EnrichableSpiAnalyzer::GetScriptResponse(
 	const char* outBuffer,
 	uint outBufferLength,
 	char* inBuffer,
@@ -447,13 +447,13 @@ bool ScriptableSpiAnalyzer::GetScriptResponse(
 	subprocessLock.unlock();
 }
 
-bool ScriptableSpiAnalyzer::SendOutputLine(const char* buffer, uint bufferLength) {
+bool EnrichableSpiAnalyzer::SendOutputLine(const char* buffer, uint bufferLength) {
 	//std::cerr << ">> ";
 	//std::cerr << buffer;
 	write(outpipefd[1], buffer, bufferLength);
 }
 
-bool ScriptableSpiAnalyzer::GetInputLine(char* buffer, uint bufferLength) {
+bool EnrichableSpiAnalyzer::GetInputLine(char* buffer, uint bufferLength) {
 	uint bufferPos = 0;
 
 	//std::cerr << "<< ";
@@ -478,7 +478,7 @@ bool ScriptableSpiAnalyzer::GetInputLine(char* buffer, uint bufferLength) {
 	return true;
 }
 
-AnalyzerResults::MarkerType ScriptableSpiAnalyzer::GetMarkerType(char* buffer, uint bufferLength) {
+AnalyzerResults::MarkerType EnrichableSpiAnalyzer::GetMarkerType(char* buffer, uint bufferLength) {
 	if(strncmp(buffer, "ErrorDot", strlen(buffer)) == 0) {
 		return AnalyzerResults::ErrorDot;
 	} else if(strncmp(buffer, "Square", strlen(buffer)) == 0) {
@@ -510,12 +510,12 @@ AnalyzerResults::MarkerType ScriptableSpiAnalyzer::GetMarkerType(char* buffer, u
 	return AnalyzerResults::Dot;
 }
 
-bool ScriptableSpiAnalyzer::NeedsRerun()
+bool EnrichableSpiAnalyzer::NeedsRerun()
 {
 	return false;
 }
 
-U32 ScriptableSpiAnalyzer::GenerateSimulationData( U64 minimum_sample_index, U32 device_sample_rate, SimulationChannelDescriptor** simulation_channels )
+U32 EnrichableSpiAnalyzer::GenerateSimulationData( U64 minimum_sample_index, U32 device_sample_rate, SimulationChannelDescriptor** simulation_channels )
 {
 	if( mSimulationInitilized == false )
 	{
@@ -527,24 +527,24 @@ U32 ScriptableSpiAnalyzer::GenerateSimulationData( U64 minimum_sample_index, U32
 }
 
 
-U32 ScriptableSpiAnalyzer::GetMinimumSampleRateHz()
+U32 EnrichableSpiAnalyzer::GetMinimumSampleRateHz()
 {
 	return 10000; //we don't have any idea, depends on the SPI rate, etc.; return the lowest rate.
 }
 
-const char* ScriptableSpiAnalyzer::GetAnalyzerName() const
+const char* EnrichableSpiAnalyzer::GetAnalyzerName() const
 {
-	return "SPI (Scriptable)";
+	return "SPI (Enrichable)";
 }
 
 const char* GetAnalyzerName()
 {
-	return "SPI (Scriptable)";
+	return "SPI (Enrichable)";
 }
 
 Analyzer* CreateAnalyzer()
 {
-	return new ScriptableSpiAnalyzer();
+	return new EnrichableSpiAnalyzer();
 }
 
 void DestroyAnalyzer( Analyzer* analyzer )

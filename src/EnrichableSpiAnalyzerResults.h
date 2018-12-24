@@ -5,14 +5,14 @@
 
 #define SPI_ERROR_FLAG ( 1 << 0 )
 
-class ScriptableSpiAnalyzer;
-class ScriptableSpiAnalyzerSettings;
+class EnrichableSpiAnalyzer;
+class EnrichableSpiAnalyzerSettings;
 
-class ScriptableSpiAnalyzerResults : public AnalyzerResults
+class EnrichableSpiAnalyzerResults : public AnalyzerResults
 {
 public:
-	ScriptableSpiAnalyzerResults( ScriptableSpiAnalyzer* analyzer, ScriptableSpiAnalyzerSettings* settings );
-	virtual ~ScriptableSpiAnalyzerResults();
+	EnrichableSpiAnalyzerResults( EnrichableSpiAnalyzer* analyzer, EnrichableSpiAnalyzerSettings* settings );
+	virtual ~EnrichableSpiAnalyzerResults();
 
 	virtual void GenerateBubbleText( U64 frame_index, Channel& channel, DisplayBase display_base );
 	virtual void GenerateExportFile( const char* file, DisplayBase display_base, U32 export_type_user_id );
@@ -26,8 +26,8 @@ protected: //functions
 	bool HandleInput(Channel& channel);
 
 protected:  //vars
-	ScriptableSpiAnalyzerSettings* mSettings;
-	ScriptableSpiAnalyzer* mAnalyzer;
+	EnrichableSpiAnalyzerSettings* mSettings;
+	EnrichableSpiAnalyzer* mAnalyzer;
 };
 
 #endif //SPI_ANALYZER_RESULTS

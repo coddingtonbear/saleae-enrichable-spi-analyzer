@@ -1,15 +1,15 @@
-#include "ScriptableSpiSimulationDataGenerator.h"
-#include "ScriptableSpiAnalyzerSettings.h"
+#include "EnrichableSpiSimulationDataGenerator.h"
+#include "EnrichableSpiAnalyzerSettings.h"
 
-ScriptableSpiSimulationDataGenerator::ScriptableSpiSimulationDataGenerator()
+EnrichableSpiSimulationDataGenerator::EnrichableSpiSimulationDataGenerator()
 {
 }
 
-ScriptableSpiSimulationDataGenerator::~ScriptableSpiSimulationDataGenerator()
+EnrichableSpiSimulationDataGenerator::~EnrichableSpiSimulationDataGenerator()
 {
 }
 
-void ScriptableSpiSimulationDataGenerator::Initialize( U32 simulation_sample_rate, ScriptableSpiAnalyzerSettings* settings )
+void EnrichableSpiSimulationDataGenerator::Initialize( U32 simulation_sample_rate, EnrichableSpiAnalyzerSettings* settings )
 {
 	mSimulationSampleRateHz = simulation_sample_rate;
 	mSettings = settings;
@@ -17,28 +17,28 @@ void ScriptableSpiSimulationDataGenerator::Initialize( U32 simulation_sample_rat
 	mClockGenerator.Init( simulation_sample_rate / 10, simulation_sample_rate );
 
 	if( settings->mMisoChannel != UNDEFINED_CHANNEL )
-		mMiso = mScriptableSpiSimulationChannels.Add( settings->mMisoChannel, mSimulationSampleRateHz, BIT_LOW );
+		mMiso = mEnrichableSpiSimulationChannels.Add( settings->mMisoChannel, mSimulationSampleRateHz, BIT_LOW );
 	else
 		mMiso = NULL;
 	
 	if( settings->mMosiChannel != UNDEFINED_CHANNEL )
-		mMosi = mScriptableSpiSimulationChannels.Add( settings->mMosiChannel, mSimulationSampleRateHz, BIT_LOW );
+		mMosi = mEnrichableSpiSimulationChannels.Add( settings->mMosiChannel, mSimulationSampleRateHz, BIT_LOW );
 	else
 		mMosi = NULL;
 
-	mClock = mScriptableSpiSimulationChannels.Add( settings->mClockChannel, mSimulationSampleRateHz, mSettings->mClockInactiveState );
+	mClock = mEnrichableSpiSimulationChannels.Add( settings->mClockChannel, mSimulationSampleRateHz, mSettings->mClockInactiveState );
 
 	if( settings->mEnableChannel != UNDEFINED_CHANNEL )
-		mEnable = mScriptableSpiSimulationChannels.Add( settings->mEnableChannel, mSimulationSampleRateHz, Invert( mSettings->mEnableActiveState ) );
+		mEnable = mEnrichableSpiSimulationChannels.Add( settings->mEnableChannel, mSimulationSampleRateHz, Invert( mSettings->mEnableActiveState ) );
 	else
 		mEnable = NULL;
 
-	mScriptableSpiSimulationChannels.AdvanceAll( mClockGenerator.AdvanceByHalfPeriod( 10.0 ) ); //insert 10 bit-periods of idle
+	mEnrichableSpiSimulationChannels.AdvanceAll( mClockGenerator.AdvanceByHalfPeriod( 10.0 ) ); //insert 10 bit-periods of idle
 
 	mValue = 0;
 }
 
-U32 ScriptableSpiSimulationDataGenerator::GenerateSimulationData( U64 largest_sample_requested, U32 sample_rate, SimulationChannelDescriptor** simulation_channels )
+U32 EnrichableSpiSimulationDataGenerator::GenerateSimulationData( U64 largest_sample_requested, U32 sample_rate, SimulationChannelDescriptor** simulation_channels )
 {
 	U64 adjusted_largest_sample_requested = AnalyzerHelpers::AdjustSimulationTargetSample( largest_sample_requested, sample_rate, mSimulationSampleRateHz );
 
@@ -46,19 +46,19 @@ U32 ScriptableSpiSimulationDataGenerator::GenerateSimulationData( U64 largest_sa
 	{
 		CreateSpiTransaction();
 
-		mScriptableSpiSimulationChannels.AdvanceAll( mClockGenerator.AdvanceByHalfPeriod( 10.0 ) ); //insert 10 bit-periods of idle
+		mEnrichableSpiSimulationChannels.AdvanceAll( mClockGenerator.AdvanceByHalfPeriod( 10.0 ) ); //insert 10 bit-periods of idle
 	}
 
-	*simulation_channels = mScriptableSpiSimulationChannels.GetArray();
-	return mScriptableSpiSimulationChannels.GetCount();
+	*simulation_channels = mEnrichableSpiSimulationChannels.GetArray();
+	return mEnrichableSpiSimulationChannels.GetCount();
 }
 
-void ScriptableSpiSimulationDataGenerator::CreateSpiTransaction()
+void EnrichableSpiSimulationDataGenerator::CreateSpiTransaction()
 {
 	if( mEnable != NULL )
 		mEnable->Transition();
 
-	mScriptableSpiSimulationChannels.AdvanceAll( mClockGenerator.AdvanceByHalfPeriod( 2.0 ) );
+	mEnrichableSpiSimulationChannels.AdvanceAll( mClockGenerator.AdvanceByHalfPeriod( 2.0 ) );
 	
 	if( mSettings->mDataValidEdge == AnalyzerEnums::LeadingEdge )
 	{
@@ -95,7 +95,7 @@ void ScriptableSpiSimulationDataGenerator::CreateSpiTransaction()
 	}
 }
 
-void ScriptableSpiSimulationDataGenerator::OutputWord_CPHA0( U64 mosi_data, U64 miso_data )
+void EnrichableSpiSimulationDataGenerator::OutputWord_CPHA0( U64 mosi_data, U64 miso_data )
 {
 	BitExtractor mosi_bits( mosi_data, mSettings->mShiftOrder, mSettings->mBitsPerTransfer );
 	BitExtractor miso_bits( miso_data, mSettings->mShiftOrder, mSettings->mBitsPerTransfer );
@@ -109,10 +109,10 @@ void ScriptableSpiSimulationDataGenerator::OutputWord_CPHA0( U64 mosi_data, U64 
 		if( mMiso != NULL )
 			mMiso->TransitionIfNeeded( miso_bits.GetNextBit() );
 
-		mScriptableSpiSimulationChannels.AdvanceAll( mClockGenerator.AdvanceByHalfPeriod( .5 ) );
+		mEnrichableSpiSimulationChannels.AdvanceAll( mClockGenerator.AdvanceByHalfPeriod( .5 ) );
 		mClock->Transition();  //data valid
 
-		mScriptableSpiSimulationChannels.AdvanceAll( mClockGenerator.AdvanceByHalfPeriod( .5 ) );
+		mEnrichableSpiSimulationChannels.AdvanceAll( mClockGenerator.AdvanceByHalfPeriod( .5 ) );
 		mClock->Transition();  //data invalid
 	}
 
@@ -122,10 +122,10 @@ void ScriptableSpiSimulationDataGenerator::OutputWord_CPHA0( U64 mosi_data, U64 
 	if( mMiso != NULL )
 		mMiso->TransitionIfNeeded( BIT_LOW );
 
-	mScriptableSpiSimulationChannels.AdvanceAll( mClockGenerator.AdvanceByHalfPeriod( 2.0 ) );
+	mEnrichableSpiSimulationChannels.AdvanceAll( mClockGenerator.AdvanceByHalfPeriod( 2.0 ) );
 }
 
-void ScriptableSpiSimulationDataGenerator::OutputWord_CPHA1( U64 mosi_data, U64 miso_data )
+void EnrichableSpiSimulationDataGenerator::OutputWord_CPHA1( U64 mosi_data, U64 miso_data )
 {
 	BitExtractor mosi_bits( mosi_data, mSettings->mShiftOrder, mSettings->mBitsPerTransfer );
 	BitExtractor miso_bits( miso_data, mSettings->mShiftOrder, mSettings->mBitsPerTransfer );
@@ -139,10 +139,10 @@ void ScriptableSpiSimulationDataGenerator::OutputWord_CPHA1( U64 mosi_data, U64 
 		if( mMiso != NULL )
 			mMiso->TransitionIfNeeded( miso_bits.GetNextBit() );
 
-		mScriptableSpiSimulationChannels.AdvanceAll( mClockGenerator.AdvanceByHalfPeriod( .5 ) );
+		mEnrichableSpiSimulationChannels.AdvanceAll( mClockGenerator.AdvanceByHalfPeriod( .5 ) );
 		mClock->Transition();  //data valid
 
-		mScriptableSpiSimulationChannels.AdvanceAll( mClockGenerator.AdvanceByHalfPeriod( .5 ) );
+		mEnrichableSpiSimulationChannels.AdvanceAll( mClockGenerator.AdvanceByHalfPeriod( .5 ) );
 	}
 
 	if( mMosi != NULL )
@@ -150,5 +150,5 @@ void ScriptableSpiSimulationDataGenerator::OutputWord_CPHA1( U64 mosi_data, U64 
 	if( mMiso != NULL )
 		mMiso->TransitionIfNeeded( BIT_LOW );
 
-	mScriptableSpiSimulationChannels.AdvanceAll( mClockGenerator.AdvanceByHalfPeriod( 2.0 ) );
+	mEnrichableSpiSimulationChannels.AdvanceAll( mClockGenerator.AdvanceByHalfPeriod( 2.0 ) );
 }
