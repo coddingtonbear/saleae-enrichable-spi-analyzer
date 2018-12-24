@@ -293,8 +293,9 @@ if __name__ == '__main__':
 The following methods can be implemented for interacting with Saleae:
 
 * `get_bubble_text(frame_index, start_sample, end_sample, direction, value)`: Set the bubble text (the text shown in blue above
-  the frame) for this frame.
-* `get_markers(frame_index, sample_count, start_sample, end_sample, mosi_value, miso_value)`: Return markers to display at given sample points.
+  the frame) for this frame.  By default, no bubble is shown.
+* `get_markers(frame_index, sample_count, start_sample, end_sample, mosi_value, miso_value)`: Return markers to display at given sample points.  By default, no markers are displayed.
+* `get_tabular(frame_index, start_sample, end_sample, mosi_value, miso_value)`: Data to display in the tabular "Decoded Protocols" section.  By default, uses the bubble text for each channel.
 
 
 See the example `custom_class.py` for an example of this in use.
