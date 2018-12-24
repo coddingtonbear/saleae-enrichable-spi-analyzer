@@ -1,18 +1,14 @@
 # Enrichable SPI Analyzer for Saleae Logic
 
-The built-in SPI Analyzer for the Saleae Logic provides you with only a
-few basic options for how to display the transferred bytes -- as ascii text,
-or in one of several numeric formats.  What if you're working with an
-SPI device that encodes more than just integer or text data into those bytes, or,
-even more likely, stores multiple values in each byte that will require you
-to either do the math in your head or export the data for post-processing?
-Isn't that really the sort of thing computers are great at doing, though?
+The built-in SPI Analyzer for the Saleae Logic provides you with only a few basic options for how to display the transferred bytes -- as ascii text, or in one of several numeric formats.
+What if you're working with an SPI device that encodes more than just integer or text data into those bytes,
+or even more likely, stores multiple values in each byte that will require you to either do the math in your head or export the data for post-processing?
+That's the sort of thing computers are great at doing; why not just let your computer do that?
 
-This "Enrichable" SPI analyzer allows you to define a simple external script
-to execute that can provide its own values to display for each SPI frame;
+This "Enrichable" SPI analyzer allows you to define a simple external script that can provide its own values to display for each SPI frame;
 you won't have to do the math in your head anymore!
 
-## Installation
+## Compiling
 
 ### MacOS
 
@@ -94,24 +90,32 @@ cmake ..
 
 Then, open the newly created solution file located here: `build\spi_analyzer.sln`
 
+## Use
 
+1. Copy `libenrichable_spi_analyzer.so` to your Saleae Logic search path
+   (see https://support.saleae.com/faq/technical-faq/setting-up-developer-directory for more detail)
+   and restart Saleae Logic.
+2. From the Analyzers menu, select "SPI (Enrichable)".
+3. Configure the Analyzer as you would normally, but fill-in a value for "Enrichment Script".
+   If you do not already have such a script, read below;
+   they are very easy to write.
+4. Begin capturing data!
 
 ## Protocol
 
-See the "examples" directory for some basic examples of functional scripts, and
-if your language of choice is Python, see the "Python Module" section below.
+See the "examples" directory for some basic examples of functional scripts,
+and if your language of choice is Python, see the "Python Module" section below.
 
-All interaction between your script and Saleae is over stdin and stdout.
-During different phases of data processing, different types of messages
-will be received by your script from Saleae.  All messages must be replied to with at least one line of output; that line may be empty if you have no
-desire to handle the received message type.
+All interaction between your script and Saleae Logic is over stdin and stdout.
+During different phases of data processing, different types of messages will be received by your script from Saleae Logic.
+All messages must be replied to with at least one line of output,
+but that line may be empty if you have no desire to handle the received message type.
 
 ### Bubbles
 
 ![Bubbles](https://s3-us-west-2.amazonaws.com/coddingtonbear-public/github/saleae-enrichable-spi-analyzer/bubbles_2.png)
 
-For each frame found by Saleae, your script will receive on stdin the following
-tab-delimited fields ending with a newline character:
+For each frame found by Saleae Logic, your script will receive on stdin the following tab-delimited fields ending with a newline character:
 
 * "bubble"
 * frame index: A hexadecimal integer indicating this frame's index.
@@ -128,12 +132,12 @@ Example:
 bubble	ab6f	3ae3012	3ae309b9	mosi	c6
 ```
 
-Your script should respond with the text to display above this frame
-in the analyzer; if the above message data indicates that this frame
-is a write to IOCTL, you could respond with this, for example:
+Your script should respond with the text to display above this frame in the analyzer;
+for example, if the above message data indicates that this frame is a read of the RXLVL register on channel A,
+you could respond with this:
 
 ```
-IOCTL (Write)
+(R) RXLVL Ch A
 ```
 
 If you would not like to set a value, return an empty line.
@@ -142,8 +146,7 @@ If you would not like to set a value, return an empty line.
 
 ![Tabular](https://s3-us-west-2.amazonaws.com/coddingtonbear-public/github/saleae-enrichable-spi-analyzer/tabular_2.png)
 
-For each frame found by Saleae, your script will receive on stdin the
-following tab-delimited fields ending with a newline character:
+For each frame found by Saleae Logic, your script will receive on stdin the following tab-delimited fields ending with a newline character:
 
 * "tabular"
 * frame index: A hexadecimal integer indicating this frame's index.
@@ -160,12 +163,12 @@ Example:
 tabular	ab6f	3ae3012	3ae309b9	c6	fa
 ```
 
-Your script should respond with the text to show in the tabular results
-(on the bottom right side of the UI). If the above frame was a write
-to IOCTL with a value of 0xfa; you could display this on the table as:
+Your script should respond with the text to show in the tabular results (on the bottom right side of the UI).
+For example, if the above frame was a read of the RXLVL register on channel A,
+you could respond with the below to show that in the tabular results:
 
 ```
-IOCTL (Write): fa
+(R) RXLVL Ch A
 ```
 
 If you would not like to set a value, return an empty line.
@@ -174,8 +177,7 @@ If you would not like to set a value, return an empty line.
 
 ![Markers](https://s3-us-west-2.amazonaws.com/coddingtonbear-public/github/saleae-enrichable-spi-analyzer/markers_3.png)
 
-For every sample point, your script will receive on stdin the following
-tab-delimited fields ending with a newline character:
+For every sample point, your script will receive on stdin the following tab-delimited fields ending with a newline character:
 
 * "marker"
 * frame index: A hexadecimal integer indicating this frame's index.
@@ -193,8 +195,8 @@ Example:
 marker	ab6f	8	3ae3012	3ae309b9	c6	fa
 ```
 
-Your script should respond with any number lines, each composed of
- three tab-separated values; send an empty line to finish.
+Your script should respond with any number lines, each composed ofthree tab-separated values;
+send an empty line to finish.
 
 * sample number: The (hexadecimal) sample number (within this frame) at which to
   display this marker.
@@ -232,8 +234,8 @@ If you would not like to set a marker on any sample, return an empty line.
 
 ## Python Module
 
-If you're hoping to put together an analyzer as quickly as possible, using
-the included python module is probably your best path forward.
+If you're hoping to put together an analyzer as quickly as possible,
+using the included python module is probably your smoothest path forward.
 
 ### Installation
 
@@ -247,9 +249,8 @@ pip install .
 
 ### Use
 
-Using this is as simple as creating your own module somewhere that subclasses
-`saleae_enrichable_spi_analyzer.EnrichableSpiAnalyzer` with methods for the
-features you'd like to use; here is a basic example:
+Using this is as simple as creating your own module somewhere that subclasses `saleae_enrichable_spi_analyzer.EnrichableSpiAnalyzer` with methods for the features you'd like to use;
+here is a basic example:
 
 ```python
 import sys
@@ -297,12 +298,16 @@ if __name__ == '__main__':
     MySimpleAnalyzer(sys.argv[1:])
 ```
 
-The following methods can be implemented for interacting with Saleae:
+The following methods can be implemented for interacting with Saleae Logic:
 
-* `get_bubble_text(frame_index, start_sample, end_sample, direction, value)`: Set the bubble text (the text shown in blue above
-  the frame) for this frame.  By default, no bubble is shown.
-* `get_markers(frame_index, sample_count, start_sample, end_sample, mosi_value, miso_value)`: Return markers to display at given sample points.  By default, no markers are displayed.
-* `get_tabular(frame_index, start_sample, end_sample, mosi_value, miso_value)`: Data to display in the tabular "Decoded Protocols" section.  By default, uses the bubble text for each channel.
-
+* `get_bubble_text(frame_index, start_sample, end_sample, direction, value)`:
+  Set the bubble text (the text shown in blue abov the frame) for this frame.
+  By default, no bubble is shown.
+* `get_markers(frame_index, sample_count, start_sample, end_sample, mosi_value, miso_value)`:
+  Return markers to display at given sample points.
+  By default, no markers are displayed.
+* `get_tabular(frame_index, start_sample, end_sample, mosi_value, miso_value)`:
+  Data to display in the tabular "Decoded Protocols" section.
+  By default, uses the bubble text for each channel.
 
 See the example `custom_class.py` for an example of this in use.
