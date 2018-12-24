@@ -108,7 +108,7 @@ desire to handle the received message type.
 
 ### Bubbles
 
-![Bubbles](https://s3-us-west-2.amazonaws.com/coddingtonbear-public/github/saleae-scriptable-spi-analyzer/bubbles.png)
+![Bubbles](https://s3-us-west-2.amazonaws.com/coddingtonbear-public/github/saleae-scriptable-spi-analyzer/bubbles_2.png)
 
 For each frame found by Saleae, your script will receive on stdin the following
 tab-delimited fields ending with a newline character:
@@ -172,7 +172,7 @@ If you would not like to set a value, return an empty line.
 
 ### Markers
 
-![Markers](https://s3-us-west-2.amazonaws.com/coddingtonbear-public/github/saleae-scriptable-spi-analyzer/markers_2.png)
+![Markers](https://s3-us-west-2.amazonaws.com/coddingtonbear-public/github/saleae-scriptable-spi-analyzer/markers_3.png)
 
 For every sample point, your script will receive on stdin the following
 tab-delimited fields ending with a newline character:
