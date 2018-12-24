@@ -101,11 +101,10 @@ Then, open the newly created solution file located here: `build\spi_analyzer.sln
 See the "examples" directory for some basic examples of functional scripts, and
 if your language of choice is Python, see the "Python Module" section below.
 
-All interaction between your script and Saleae is over standard out and in.
+All interaction between your script and Saleae is over stdin and stdout.
 During different phases of data processing, different types of messages
-will be emitted.  All messages must be replied to with at least one
-line of output; that line may be empty if your script does not want
-to handle a given message type.
+will be Saleae and received by your script.  All messages must be replied to with at least one line of output; that line may be empty if you have no
+desire to handle the received message type.
 
 ### Bubbles
 
