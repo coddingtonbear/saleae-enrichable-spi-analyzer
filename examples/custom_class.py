@@ -2,7 +2,7 @@ import sys
 from typing import List
 
 from saleae_scriptable_spi_analyzer import (
-    ScriptableSpiAnalyzer, Channel, Marker, MarkerType, BubbleText
+    ScriptableSpiAnalyzer, Channel, Marker, MarkerType
 )
 
 
@@ -54,7 +54,7 @@ class SC16IS7xxAnalyzer(ScriptableSpiAnalyzer):
         end_sample: int,
         direction: Channel,
         value: int
-    ) -> BubbleText:
+    ) -> str:
         if direction == Channel.MOSI:
             if not self.request_phase:
                 self.request_phase = True
@@ -70,7 +70,7 @@ class SC16IS7xxAnalyzer(ScriptableSpiAnalyzer):
                     self.request_phase = False
                     return
 
-                return BubbleText(
+                return (
                     "({readwrite}) {register} Ch {channel}".format(
                         readwrite="R" if read else "W",
                         register=self.get_register_name(register, read),
@@ -80,10 +80,10 @@ class SC16IS7xxAnalyzer(ScriptableSpiAnalyzer):
             else:
                 self.request_phase = False
                 if self.request_is_write:
-                    return BubbleText(hex(value))
+                    return hex(value)
         else:
             if not self.request_phase and not self.request_is_write:
-                return BubbleText(hex(value))
+                return hex(value)
 
     def get_markers(
         self,

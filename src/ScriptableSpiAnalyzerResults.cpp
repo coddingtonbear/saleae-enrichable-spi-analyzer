@@ -144,47 +144,33 @@ void ScriptableSpiAnalyzerResults::GenerateFrameTabularText( U64 frame_index, Di
 	ClearTabularText();
 	Frame frame = GetFrame( frame_index );
 
-	bool mosi_used = true;
-	bool miso_used = true;
+	std::stringstream outputStream;
 
-	if( mSettings->mMosiChannel == UNDEFINED_CHANNEL )
-		mosi_used = false;
+	outputStream << TABULAR_PREFIX;
+	outputStream << UNIT_SEPARATOR;
+	outputStream << std::hex << frame_index;
+	outputStream << UNIT_SEPARATOR;
+	outputStream << std::hex << frame.mStartingSampleInclusive;
+	outputStream << UNIT_SEPARATOR;
+	outputStream << std::hex << frame.mEndingSampleInclusive;
+	outputStream << UNIT_SEPARATOR;
+	outputStream << std::hex << frame.mData1;
+	outputStream << UNIT_SEPARATOR;
+	outputStream << std::hex << frame.mData2;
+	outputStream << LINE_SEPARATOR;
 
-	if( mSettings->mMisoChannel == UNDEFINED_CHANNEL )
-		miso_used = false;
+	std::string value = outputStream.str();
+	char tabularText[512];
+	mAnalyzer->GetScriptResponse(
+		value.c_str(),
+		value.length(),
+		tabularText,
+		512
+	);
 
-	char mosi_str[128];
-	char miso_str[128];
-
-	std::stringstream ss;
-
-	if( ( frame.mFlags & SPI_ERROR_FLAG ) == 0 )
-	{
-		if( mosi_used == true )
-			AnalyzerHelpers::GetNumberString( frame.mData1, display_base, mSettings->mBitsPerTransfer, mosi_str, 128 );
-		if( miso_used == true )
-			AnalyzerHelpers::GetNumberString( frame.mData2, display_base, mSettings->mBitsPerTransfer, miso_str, 128 );
-
-		if( mosi_used == true && miso_used == true )
-		{
-			ss << "MOSI: " << mosi_str << ";  MISO: " << miso_str;
-		}else
-		{
-			if( mosi_used == true )
-			{
-				ss << "MOSI: " << mosi_str;
-			}else
-			{
-				ss << "MISO: " << miso_str;
-			}
-		}
+	if(strlen(tabularText) > 0) {
+		AddTabularText(tabularText);
 	}
-	else
-	{
-		ss << "The initial (idle) state of the CLK line does not match the settings.";
-	}
-
-	AddTabularText( ss.str().c_str() );
 }
 
 void ScriptableSpiAnalyzerResults::GeneratePacketTabularText( U64 /*packet_id*/, DisplayBase /*display_base*/ )  //unrefereced vars commented out to remove warnings.

@@ -137,6 +137,36 @@ IOCTL (Write)
 
 If you would not like to set a value, return an empty line.
 
+### Tabular
+
+For each frame found by Saleae, your script will receive on stdin the
+following tab-delimited fields ending with a newline character:
+
+* "tabular"
+* frame index: A hexadecimal integer indicating this frame's index.
+* starting sample ID: A hexadecimal integer indicating the frame's
+  starting sample ID.
+* ending sample ID: A hexadecimal integer indicating the frame's
+  ending sample ID.
+* mosi value: A hexadecimal integer indicating the frame's mosi value. 
+* miso value: A hexadecimal integer indicating the frame's miso value. 
+
+Example:
+
+```
+tabular	ab6f	3ae3012	3ae309b9	c6	fa
+```
+
+Your script should respond with the text to show in the tabular results
+(on the bottom right side of the UI). If the above frame was a write
+to IOCTL with a value of 0xfa; you could display this on the table as:
+
+```
+IOCTL (Write): fa
+```
+
+If you would not like to set a value, return an empty line.
+
 ### Markers
 
 For every sample point, your script will receive on stdin the following
@@ -218,7 +248,7 @@ features you'd like to use; here is a basic example:
 import sys
 
 from saleae_scriptable_spi_analyzer import (
-    ScriptableSpiAnalyzer, Channel, Marker, MarkerType, BubbleText
+    ScriptableSpiAnalyzer, Channel, Marker, MarkerType
 )
 
 
@@ -230,8 +260,8 @@ class MySimpleAnalyzer(ScriptableSpiAnalyzer):
         end_sample: int,
         direction: Channel,
         value: int
-    ) -> BubbleText:
-        return BubbleText(
+    ) -> str:
+        return (
             "This message will be displayed above every frame in the blue bubble"
         )
 
@@ -265,3 +295,6 @@ The following methods can be implemented for interacting with Saleae:
 * `get_bubble_text(frame_index, start_sample, end_sample, direction, value)`: Set the bubble text (the text shown in blue above
   the frame) for this frame.
 * `get_markers(frame_index, sample_count, start_sample, end_sample, mosi_value, miso_value)`: Return markers to display at given sample points.
+
+
+See the example `custom_class.py` for an example of this in use.

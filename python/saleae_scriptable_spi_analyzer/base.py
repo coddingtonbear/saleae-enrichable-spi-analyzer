@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 __all__ = [
-    'Channel', 'MarkerType', 'BubbleText', 'Marker', 'ScriptableSpiAnalyzer'
+    'Channel', 'MarkerType', 'Marker', 'ScriptableSpiAnalyzer'
 ]
 
 
@@ -33,10 +33,6 @@ class MarkerType(enum.Enum):
     One = 9
     Zero = 10
     Dot = 11
-
-
-class BubbleText(str):
-    pass
 
 
 class Marker(object):
@@ -66,7 +62,7 @@ class ScriptableSpiAnalyzer(object):
         end_sample: int,
         direction: Channel,
         value: int
-    ) -> BubbleText:
+    ) -> str:
         return ""
 
     def _get_bubble_text(self, *args, **kwargs) -> str:
@@ -103,6 +99,43 @@ class ScriptableSpiAnalyzer(object):
                 kwargs
             )
             return []
+
+    def get_tabular(
+        self,
+        frame_index: int,
+        start_sample: int,
+        end_sample: int,
+        mosi_value: int,
+        miso_value: int
+    ) -> str:
+        return "MOSI: {mosi}; MISO: {miso}".format(
+            mosi=self.get_bubble_text(
+                frame_index,
+                start_sample,
+                end_sample,
+                Channel.MISO,
+                miso_value,
+            ),
+            miso=self.get_bubble_text(
+                frame_index,
+                start_sample,
+                end_sample,
+                Channel.MOSI,
+                mosi_value,
+            ),
+        )
+
+    def _get_tabular(self, *args, **kwargs) -> str:
+        try:
+            return self.get_tabular(*args, **kwargs)
+        except Exception as e:
+            logger.exception(
+                "get_tabular_text failed: %s; args: %s; kwargs: %s",
+                e,
+                args,
+                kwargs
+            )
+            return ""
 
     @classmethod
     def add_arguments(cls, parser):
@@ -166,6 +199,18 @@ class ScriptableSpiAnalyzer(object):
                 )
                 if results:
                     output_line = '\n'.join([str(r) for r in results]) + '\n'
+            elif line.startswith('tabular\t'):
+                _, idx, start, end, mosi, miso = line.split("\t")
+
+                result = self._get_tabular(
+                    int(idx, 16),
+                    int(start, 16),
+                    int(end, 16),
+                    int(mosi, 16),
+                    int(miso, 16)
+                )
+                if result:
+                    output_line = str(result)
 
             logger.debug("<< %s", output_line)
 

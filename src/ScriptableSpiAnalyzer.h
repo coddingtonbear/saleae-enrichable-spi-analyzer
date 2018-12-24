@@ -5,18 +5,15 @@
 #include "ScriptableSpiAnalyzerResults.h"
 #include "ScriptableSpiSimulationDataGenerator.h"
 
-#define FRAMEDATA_PREFIX "frame"
 #define BUBBLE_PREFIX "bubble"
 #define MARKER_PREFIX "marker"
+#define TABULAR_PREFIX "tabular"
 
 #define MOSI_PREFIX "mosi"
 #define MISO_PREFIX "miso"
 
 #define UNIT_SEPARATOR '\t'
 #define LINE_SEPARATOR '\n'
-
-#define CMD_BUBBLE "bubble"
-#define CMD_MARKER "marker"
 
 class ScriptableSpiAnalyzerSettings;
 class ScriptableSpiAnalyzer : public Analyzer2
