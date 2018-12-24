@@ -140,7 +140,7 @@ If you would not like to set a value, return an empty line.
 
 ### Tabular
 
-![Tabular](https://s3-us-west-2.amazonaws.com/coddingtonbear-public/github/saleae-scriptable-spi-analyzer/tabular.png)
+![Tabular](https://s3-us-west-2.amazonaws.com/coddingtonbear-public/github/saleae-scriptable-spi-analyzer/tabular_2.png)
 
 For each frame found by Saleae, your script will receive on stdin the
 following tab-delimited fields ending with a newline character:

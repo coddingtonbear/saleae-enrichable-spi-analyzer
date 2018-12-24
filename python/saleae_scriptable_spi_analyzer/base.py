@@ -109,14 +109,14 @@ class ScriptableSpiAnalyzer(object):
         miso_value: int
     ) -> str:
         return "MOSI: {mosi}; MISO: {miso}".format(
-            mosi=self.get_bubble_text(
+            miso=self.get_bubble_text(
                 frame_index,
                 start_sample,
                 end_sample,
                 Channel.MISO,
                 miso_value,
             ),
-            miso=self.get_bubble_text(
+            mosi=self.get_bubble_text(
                 frame_index,
                 start_sample,
                 end_sample,
