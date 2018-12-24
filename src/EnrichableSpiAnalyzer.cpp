@@ -157,13 +157,10 @@ bool EnrichableSpiAnalyzer::GetFeatureEnablement(const char* feature) {
 		result,
 		16
 	);
-	std::cerr << value;
-	std::cerr << "\n";
-	std::cerr << feature;
-	std::cerr << " ";
-	std::cerr << result;
-	std::cerr << "\n";
 	if(strcmp(result, "no") == 0) {
+		std::cerr << "message type \"";
+		std::cerr << feature;
+		std::cerr << "\" disabled\n";
 		return false;
 	}
 	return true;

@@ -69,11 +69,11 @@ class EnrichableSpiAnalyzer(object):
         features = set()
 
         if self.ENABLE_MARKER:
-            features.append(MessageType.marker)
+            features.add(MessageType.marker)
         if self.ENABLE_BUBBLE:
-            features.append(MessageType.bubble)
+            features.add(MessageType.bubble)
         if self.ENABLE_TABULAR:
-            features.append(MessageType.tabular)
+            features.add(MessageType.tabular)
 
         return features
 
