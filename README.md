@@ -109,6 +109,8 @@ to handle a given message type.
 
 ### Bubbles
 
+![Bubbles](https://s3-us-west-2.amazonaws.com/coddingtonbear-public/github/saleae-scriptable-spi-analyzer/bubbles.png)
+
 For each frame found by Saleae, your script will receive on stdin the following
 tab-delimited fields ending with a newline character:
 
@@ -139,6 +141,8 @@ If you would not like to set a value, return an empty line.
 
 ### Tabular
 
+![Tabular](https://s3-us-west-2.amazonaws.com/coddingtonbear-public/github/saleae-scriptable-spi-analyzer/tabular.png)
+
 For each frame found by Saleae, your script will receive on stdin the
 following tab-delimited fields ending with a newline character:
 
@@ -168,6 +172,8 @@ IOCTL (Write): fa
 If you would not like to set a value, return an empty line.
 
 ### Markers
+
+![Markers](https://s3-us-west-2.amazonaws.com/coddingtonbear-public/github/saleae-scriptable-spi-analyzer/markers.png)
 
 For every sample point, your script will receive on stdin the following
 tab-delimited fields ending with a newline character:
@@ -210,6 +216,8 @@ Possible marker types are:
 * "Stop"
 * "One"
 * "Zero"
+
+See the above screenshot for examples.
 
 For example; if you want to show "DownArrow" on the first sample of miso,
 and "Stop" on the fourth sample of mosi:

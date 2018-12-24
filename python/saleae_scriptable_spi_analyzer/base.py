@@ -44,7 +44,7 @@ class Marker(object):
     def __str__(self):
         return '{idx}\t{channel}\t{type}'.format(
             idx=self._idx,
-            channel=self._direction.name,
+            channel=self._direction.name.lower(),
             type=self._marker_type.name,
         )
 
