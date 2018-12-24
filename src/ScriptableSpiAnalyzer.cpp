@@ -482,7 +482,7 @@ AnalyzerResults::MarkerType ScriptableSpiAnalyzer::GetMarkerType(char* buffer, u
 	if(strncmp(buffer, "ErrorDot", strlen(buffer)) == 0) {
 		return AnalyzerResults::ErrorDot;
 	} else if(strncmp(buffer, "Square", strlen(buffer)) == 0) {
-		return AnalyzerResults::ErrorDot;
+		return AnalyzerResults::Square;
 	} else if(strncmp(buffer, "ErrorSquare", strlen(buffer)) == 0) {
 		return AnalyzerResults::ErrorSquare;
 	} else if(strncmp(buffer, "UpArrow", strlen(buffer)) == 0) {
