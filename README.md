@@ -154,8 +154,8 @@ For each frame found by Saleae Logic, your script will receive on stdin the foll
   starting sample ID.
 * ending sample ID: A hexadecimal integer indicating the frame's
   ending sample ID.
-* mosi value: A hexadecimal integer indicating the frame's mosi value. 
-* miso value: A hexadecimal integer indicating the frame's miso value. 
+* mosi value: A hexadecimal integer indicating the frame's mosi value.
+* miso value: A hexadecimal integer indicating the frame's miso value.
 
 Example:
 
@@ -186,8 +186,8 @@ For every sample point, your script will receive on stdin the following tab-deli
   starting sample ID.
 * ending sample ID: A hexadecimal integer indicating the frame's
   ending sample ID.
-* mosi value: A hexadecimal integer indicating the frame's mosi value. 
-* miso value: A hexadecimal integer indicating the frame's miso value. 
+* mosi value: A hexadecimal integer indicating the frame's mosi value.
+* miso value: A hexadecimal integer indicating the frame's miso value.
 
 Example:
 
@@ -195,7 +195,7 @@ Example:
 marker	ab6f	8	3ae3012	3ae309b9	c6	fa
 ```
 
-Your script should respond with any number lines, each composed ofthree tab-separated values;
+Your script should respond with any number lines, each composed of three tab-separated values;
 send an empty line to finish.
 
 * sample number: The (hexadecimal) sample number (within this frame) at which to
