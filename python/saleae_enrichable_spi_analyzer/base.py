@@ -3,7 +3,6 @@ import enum
 import fileinput
 import logging
 import sys
-from typing import List, Optional
 
 
 logger = logging.getLogger(__name__)
@@ -56,10 +55,6 @@ class Marker(object):
 
 
 class EnrichableSpiAnalyzer(object):
-    ENABLE_MARKER = True
-    ENABLE_BUBBLE = True
-    ENABLE_TABULAR = True
-
     def __init__(self, *args):
         self.args = args
 
@@ -68,116 +63,37 @@ class EnrichableSpiAnalyzer(object):
     def get_enabled_message_types(self):
         features = set()
 
-        if self.ENABLE_MARKER:
+        if hasattr(self, 'handle_marker'):
             features.add(MessageType.marker)
-        if self.ENABLE_BUBBLE:
+        if hasattr(self, 'handle_bubble'):
             features.add(MessageType.bubble)
-        if self.ENABLE_TABULAR:
+        if hasattr(self, 'handle_tabular'):
             features.add(MessageType.tabular)
 
         return features
 
-    def get_bubble_text(
-        self,
-        packet_id: Optional[int],
-        frame_index: int,
-        start_sample: int,
-        end_sample: int,
-        frame_type: int,
-        flags: int,
-        direction: Channel,
-        value: int
-    ) -> List[str]:
-        return ""
-
-    def _get_bubble_text(self, *args, **kwargs) -> str:
+    def _call_handler(self, cmd, *args, **kwargs):
+        handler_name = 'handle_{cmd}'.format(cmd=cmd)
         try:
-            return self.get_bubble_text(*args, **kwargs)
+            handler = getattr(self, handler_name)
+        except AttributeError:
+            logger.exception(
+                "Although enabled, handler %s does not exist.",
+                handler_name,
+            )
+            return
+
+        try:
+            return handler(*args, **kwargs)
         except Exception as e:
             logger.exception(
-                "get_bubble_text failed: %s; args: %s; kwargs: %s",
+                "%s failed: %s; args: %s; kwargs: %s",
+                handler_name,
                 e,
                 args,
                 kwargs
             )
-            return ""
-
-    def get_markers(
-        self,
-        packet_id: Optional[int],
-        frame_index: int,
-        sample_count: int,
-        start_sample: int,
-        end_sample: int,
-        frame_type: int,
-        flags: int,
-        mosi_value: int,
-        miso_value: int
-    ) -> List[Marker]:
-        return []
-
-    def _get_markers(self, *args, **kwargs) -> List[str]:
-        try:
-            return self.get_markers(*args, **kwargs)
-        except Exception as e:
-            logger.exception(
-                "get_markers failed: %s; args: %s; kwargs: %s",
-                e,
-                args,
-                kwargs
-            )
-            return []
-
-    def get_tabular(
-        self,
-        packet_id: Optional[int],
-        frame_index: int,
-        start_sample: int,
-        end_sample: int,
-        frame_type: int,
-        flags: int,
-        mosi_value: int,
-        miso_value: int
-    ) -> List[str]:
-        miso_bubble = self.get_bubble_text(
-            packet_id,
-            frame_index,
-            start_sample,
-            end_sample,
-            frame_type,
-            flags,
-            Channel.MISO,
-            miso_value,
-        )
-        mosi_bubble = self.get_bubble_text(
-            packet_id,
-            frame_index,
-            start_sample,
-            end_sample,
-            frame_type,
-            flags,
-            Channel.MOSI,
-            mosi_value,
-        )
-
-        return [
-            "MOSI: {mosi}; MISO: {miso}".format(
-                mosi=mosi_bubble[0] if mosi_bubble else hex(mosi_value),
-                miso=miso_bubble[0] if miso_bubble else hex(miso_value),
-            )
-        ]
-
-    def _get_tabular(self, *args, **kwargs) -> str:
-        try:
-            return self.get_tabular(*args, **kwargs)
-        except Exception as e:
-            logger.exception(
-                "get_tabular_text failed: %s; args: %s; kwargs: %s",
-                e,
-                args,
-                kwargs
-            )
-            return ""
+            return
 
     @classmethod
     def add_arguments(cls, parser):
@@ -223,7 +139,8 @@ class EnrichableSpiAnalyzer(object):
                     line.split("\t")
                 )
 
-                results = self._get_bubble_text(
+                results = self._call_handler(
+                    "bubble",
                     int(pkt, 16) if pkt else None,
                     int(idx, 16),
                     int(start, 16),
@@ -240,7 +157,8 @@ class EnrichableSpiAnalyzer(object):
                     line.split("\t")
                 )
 
-                results = self._get_markers(
+                results = self._call_handler(
+                    "marker",
                     int(pkt, 16) if pkt else None,
                     int(idx, 16),
                     int(count, 16),
@@ -258,7 +176,8 @@ class EnrichableSpiAnalyzer(object):
                     line.split("\t")
                 )
 
-                results = self._get_tabular(
+                results = self._call_handler(
+                    "tabular",
                     int(pkt, 16) if pkt else None,
                     int(idx, 16),
                     int(start, 16),

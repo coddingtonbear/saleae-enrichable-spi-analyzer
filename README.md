@@ -324,7 +324,7 @@ from saleae_enrichable_spi_analyzer import (
 
 
 class MySimpleAnalyzer(EnrichableSpiAnalyzer):
-    def get_bubble_text(
+    def handle_bubble(
         self,
         packet_id: Optional[int],
         frame_index: int,
@@ -339,7 +339,7 @@ class MySimpleAnalyzer(EnrichableSpiAnalyzer):
             "This message will be displayed above every frame in the blue bubble"
         ]
 
-    def get_markers(
+    def handle_marker(
         self,
         packet_id: Optional[int],
         frame_index: int,
@@ -367,27 +367,70 @@ if __name__ == '__main__':
     MySimpleAnalyzer(sys.argv[1:])
 ```
 
-The following methods can be implemented for interacting with Saleae Logic:
-
-* `get_bubble_text(packet_id, frame_index, start_sample, end_sample, frame_type, flags, direction, value)`:
-  Set the bubble text (the text shown in blue abov the frame) for this frame.
-  By default, no bubble is shown.  It is recommended that you return multiple
-  strings of varying lengths.
-* `get_markers(packet_id, frame_index, sample_count, start_sample, end_sample, frame_type, flags, mosi_value, miso_value)`:
-  Return markers to display at given sample points.
-  By default, no markers are displayed.
-* `get_tabular(packet_id, frame_index, start_sample, end_sample, frame_type, flags, mosi_value, miso_value)`:
-  Data to display in the tabular "Decoded Protocols" section.
-  By default, uses the bubble text for each channel.
-
-To improve performance, you are also able to disable messages of specific types
-by setting the following class-level boolean values:
-
-* `ENABLE_MARKER`; setting this to false will instruct Saleae Logic to not
-  send `marker` messages to your script.
-* `ENABLE_BUBBLE`; setting this to false will instruct Saleae Logic to not
-  send `bubble` messages to your script.
-* `ENABLE_TABULAR`; setting this to false will instruct Saleae Logic to not
-  send `tabular` messages to your script.
+The methods described below can be implemented for interacting with Saleae Logic.
+Methods not implemented will automatically be disabled according to the
+"Feature (Enablement)" section above.
 
 See the example `custom_class.py` for an example of this in use.
+
+#### `handle_bubble`
+
+```python
+    def handle_bubble(
+        self,
+        packet_id: Optional[int],
+        frame_index: int,
+        start_sample: int,
+        end_sample: int,
+        frame_type: int,
+        flags: int,
+        direction: Channel,
+        value: int
+    ) -> List[str]:
+        return []
+```
+
+Set the bubble text (the text shown in blue abov the frame) for this frame.
+By default, no bubble is shown.  It is recommended that you return multiple
+strings of varying lengths.
+
+#### `handle_marker`
+
+```python
+    def handle_marker(
+        self,
+        packet_id: Optional[int],
+        frame_index: int,
+        sample_count: int,
+        start_sample: int,
+        end_sample: int,
+        frame_type: int,
+        flags: int,
+        mosi_value: int,
+        miso_value: int
+    ) -> List[Marker]:
+        return []
+```
+
+Return markers to display at given sample points.
+By default, no markers are displayed.
+
+### `handle_tabular`
+
+```python
+    def handle_tabular(
+        self,
+        packet_id: Optional[int],
+        frame_index: int,
+        start_sample: int,
+        end_sample: int,
+        frame_type: int,
+        flags: int,
+        mosi_value: int,
+        miso_value: int
+    ) -> List[str]:
+		return []
+```
+
+Data to display in the tabular "Decoded Protocols" section.
+By default, uses the bubble text for each channel.

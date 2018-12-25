@@ -11,8 +11,6 @@ logger = logging.getLogger(__name__)
 
 
 class SC16IS7xxAnalyzer(EnrichableSpiAnalyzer):
-    ENABLE_MARKER = False
-
     CHANNEL_NAMES = {
         0b00: 'A',
         0b01: 'B',
@@ -54,7 +52,7 @@ class SC16IS7xxAnalyzer(EnrichableSpiAnalyzer):
         self.last_packet_id_miso = None
         self.request_is_write = False
 
-    def get_bubble_text(
+    def handle_bubble(
         self,
         packet_id: Optional[int],
         frame_index: int,
@@ -113,20 +111,6 @@ class SC16IS7xxAnalyzer(EnrichableSpiAnalyzer):
             if not request_phase and not self.request_is_write:
                 return [hex(value)]
 
-        return []
-
-    def get_markers(
-        self,
-        packet_id: Optional[int],
-        frame_index: int,
-        sample_count: int,
-        start_sample: int,
-        end_sample: int,
-        frame_type: int,
-        flags: int,
-        mosi_value: int,
-        miso_value: int
-    ) -> List[Marker]:
         return []
 
 
