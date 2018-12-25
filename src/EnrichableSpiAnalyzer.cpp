@@ -518,10 +518,13 @@ bool EnrichableSpiAnalyzer::SendOutputLine(const char* buffer, unsigned bufferLe
 	//std::cerr << ">> ";
 	//std::cerr << buffer;
 	write(outpipefd[1], buffer, bufferLength);
+
+	return true;
 }
 
 bool EnrichableSpiAnalyzer::GetInputLine(char* buffer, unsigned bufferLength) {
 	unsigned bufferPos = 0;
+	bool result = false;
 
 	//std::cerr << "<< ";
 
@@ -543,42 +546,43 @@ bool EnrichableSpiAnalyzer::GetInputLine(char* buffer, unsigned bufferLength) {
 
 	//std::cerr << '\n';
 
-	if(strlen(buffer) == 0) {
-		return false;
+	if(strlen(buffer) > 0) {
+		result = true;
 	}
-	return true;
+
+	return result;
 }
 
 AnalyzerResults::MarkerType EnrichableSpiAnalyzer::GetMarkerType(char* buffer, unsigned bufferLength) {
+	AnalyzerResults::MarkerType markerType = AnalyzerResults::Dot;
+
 	if(strncmp(buffer, "ErrorDot", strlen(buffer)) == 0) {
-		return AnalyzerResults::ErrorDot;
+		markerType = AnalyzerResults::ErrorDot;
 	} else if(strncmp(buffer, "Square", strlen(buffer)) == 0) {
-		return AnalyzerResults::Square;
+		markerType = AnalyzerResults::Square;
 	} else if(strncmp(buffer, "ErrorSquare", strlen(buffer)) == 0) {
-		return AnalyzerResults::ErrorSquare;
+		markerType = AnalyzerResults::ErrorSquare;
 	} else if(strncmp(buffer, "UpArrow", strlen(buffer)) == 0) {
-		return AnalyzerResults::UpArrow;
+		markerType = AnalyzerResults::UpArrow;
 	} else if(strncmp(buffer, "DownArrow", strlen(buffer)) == 0) {
-		return AnalyzerResults::DownArrow;
+		markerType = AnalyzerResults::DownArrow;
 	} else if(strncmp(buffer, "X", strlen(buffer)) == 0) {
-		return AnalyzerResults::X;
+		markerType = AnalyzerResults::X;
 	} else if(strncmp(buffer, "ErrorX", strlen(buffer)) == 0) {
-		return AnalyzerResults::ErrorX;
+		markerType = AnalyzerResults::ErrorX;
 	} else if(strncmp(buffer, "Start", strlen(buffer)) == 0) {
-		return AnalyzerResults::Start;
+		markerType = AnalyzerResults::Start;
 	} else if(strncmp(buffer, "Stop", strlen(buffer)) == 0) {
-		return AnalyzerResults::Stop;
+		markerType = AnalyzerResults::Stop;
 	} else if(strncmp(buffer, "One", strlen(buffer)) == 0) {
-		return AnalyzerResults::One;
+		markerType = AnalyzerResults::One;
 	} else if(strncmp(buffer, "Zero", strlen(buffer)) == 0) {
-		return AnalyzerResults::Zero;
+		markerType = AnalyzerResults::Zero;
 	} else if(strncmp(buffer, "Dot", strlen(buffer)) == 0) {
-		return AnalyzerResults::Dot;
+		markerType = AnalyzerResults::Dot;
 	}
-	std::cerr << "Unrecognized marker type: ";
-	std::cerr << buffer;
-	std::cerr << "; using Dot instead.\n";
-	return AnalyzerResults::Dot;
+
+	return markerType;
 }
 
 bool EnrichableSpiAnalyzer::NeedsRerun()
