@@ -9,6 +9,10 @@ That's the sort of thing computers are great at doing; why don't we just let you
 This "Enrichable" SPI analyzer allows you to define a simple external script written in your favorite language that can provide its own text and markers to display for each SPI frame.
 Now you can focus on solving your actual problem instead of interpreting inscrutible hex values.
 
+## Related
+
+* [python-saleae-enrichable-analyzer](https://github.com/coddingtonbear/python-saleae-enrichable-analyzer): A Python module that intends to make it extremely easy for you to write your own enrichment script.
+
 ## Compiling
 
 ### MacOS
@@ -91,7 +95,7 @@ it likely isn't a huge task for somebody who is!
 ## Protocol
 
 See the "examples" directory for some basic examples of functional scripts,
-and if your language of choice is Python, see the "Python Module" section below.
+and if your language of choice is Python, see [this repository](https://github.com/coddingtonbear/python-saleae-enrichable-analyzer).
 
 All interaction between your script and Saleae Logic is over stdin and stdout.
 During different phases of data processing, different types of messages will be received by your script from Saleae Logic.
@@ -280,143 +284,3 @@ this field will return the frame's index in its packet.
 
 There are currently no flags set by this analyzer,
 but flags may be added in the future.
-
-## Python Module
-
-If you're hoping to put together an analyzer as quickly as possible,
-using the included python module is probably your smoothest path forward.
-
-### Installation
-
-Use of this Python module requires at least Python 3.4.
-
-From within the `python` directory:
-
-```
-pip install .
-```
-
-### Use
-
-Using this is as simple as creating your own module somewhere that subclasses `saleae_enrichable_spi_analyzer.EnrichableSpiAnalyzer` with methods for the features you'd like to use;
-here is a basic example:
-
-```python
-import sys
-from typing import List, Optional
-
-from saleae_enrichable_spi_analyzer import (
-    Channel, EnrichableSpiAnalyzer, Marker, MarkerType
-)
-
-
-class MySimpleAnalyzer(EnrichableSpiAnalyzer):
-    def handle_bubble(
-        self,
-        packet_id: Optional[int],
-        frame_index: int,
-        start_sample: int,
-        end_sample: int,
-        frame_type: int,
-        flags: int,
-        direction: Channel,
-        value: int
-    ) -> List[str]:
-        return [
-            "This message will be displayed above every frame in the blue bubble"
-        ]
-
-    def handle_marker(
-        self,
-        packet_id: Optional[int],
-        frame_index: int,
-        sample_count: int,
-        start_sample: int,
-        end_sample: int,
-        frame_type: int,
-        flags: int,
-        mosi_value: int,
-        miso_value: int
-    ) -> List[Marker]:
-        markers = []
-
-        if(miso_value == 0xff) {
-            # This will show a "Stop" marker on the zeroth sample
-            # of the frame on the MISO channel when its value is 0xff.
-            markers.append(
-                Marker(0, Channel.MISO, MarkerType.Stop)
-            )
-        }
-
-        return markers
-
-if __name__ == '__main__':
-    MySimpleAnalyzer(sys.argv[1:])
-```
-
-The methods described below can be implemented for interacting with Saleae Logic.
-Methods not implemented will automatically be disabled according to the
-"Feature (Enablement)" section above.
-
-See the example `custom_class.py` for an example of this in use.
-
-#### `handle_bubble`
-
-```python
-    def handle_bubble(
-        self,
-        packet_id: Optional[int],
-        frame_index: int,
-        start_sample: int,
-        end_sample: int,
-        frame_type: int,
-        flags: int,
-        direction: Channel,
-        value: int
-    ) -> List[str]:
-        return []
-```
-
-Set the bubble text (the text shown in blue abov the frame) for this frame.
-By default, no bubble is shown.  It is recommended that you return multiple
-strings of varying lengths.
-
-#### `handle_marker`
-
-```python
-    def handle_marker(
-        self,
-        packet_id: Optional[int],
-        frame_index: int,
-        sample_count: int,
-        start_sample: int,
-        end_sample: int,
-        frame_type: int,
-        flags: int,
-        mosi_value: int,
-        miso_value: int
-    ) -> List[Marker]:
-        return []
-```
-
-Return markers to display at given sample points.
-By default, no markers are displayed.
-
-#### `handle_tabular`
-
-```python
-    def handle_tabular(
-        self,
-        packet_id: Optional[int],
-        frame_index: int,
-        start_sample: int,
-        end_sample: int,
-        frame_type: int,
-        flags: int,
-        mosi_value: int,
-        miso_value: int
-    ) -> List[str]:
-        return []
-```
-
-Data to display in the tabular "Decoded Protocols" section.
