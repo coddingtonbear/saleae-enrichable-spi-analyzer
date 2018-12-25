@@ -428,7 +428,7 @@ By default, no markers are displayed.
         mosi_value: int,
         miso_value: int
     ) -> List[str]:
-		return []
+        return []
 ```
 
 Data to display in the tabular "Decoded Protocols" section.
