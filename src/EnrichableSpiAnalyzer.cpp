@@ -16,10 +16,6 @@
 #include <errno.h>
 #include <wordexp.h>
 
-#if defined(__linux__)
-	#include <sys/prctl.h>
-#endif
-
  
 //enum SpiBubbleType { SpiData, SpiError };
 
@@ -103,10 +99,6 @@ void EnrichableSpiAnalyzer::StartSubprocess() {
 			std::cerr << "\n";
 			exit(errno);
 		}
-
-		#if defined(__linux__)
-			prctl(PR_SET_PDEATHSIG, SIGINT);
-		#endif
 
 		wordexp_t cmdParsed;
 		char *args[25];
