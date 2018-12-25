@@ -508,10 +508,14 @@ bool EnrichableSpiAnalyzer::GetScriptResponse(
 	char* inBuffer,
 	unsigned inBufferLength
 ) {
+	bool result;
+
 	LockSubprocess();
 	SendOutputLine(outBuffer, outBufferLength);
-	GetInputLine(inBuffer, inBufferLength);
+	result = GetInputLine(inBuffer, inBufferLength);
 	UnlockSubprocess();
+
+	return result;
 }
 
 bool EnrichableSpiAnalyzer::SendOutputLine(const char* buffer, unsigned bufferLength) {
