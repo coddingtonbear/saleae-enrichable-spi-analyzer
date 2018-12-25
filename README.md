@@ -1,12 +1,11 @@
 # Enrichable SPI Analyzer for Saleae Logic
 
 The built-in SPI Analyzer for the Saleae Logic provides you with only a few basic options for how to display the transferred bytes -- as ascii text, or in one of several numeric formats.
-What if you're working with an SPI device that encodes more than just integer or text data into those bytes,
-or even more likely, stores multiple values in each byte that will require you to either do the math in your head or export the data for post-processing?
-That's the sort of thing computers are great at doing; why not just let your computer do that?
+What if you're working with an SPI device that encodes more than just integer or text data into those bytes, or even stores multiple values in each byte that will require you to either do the math in your head, export the data for post-processing, or display the frame as binary bits so you can directly look at the parts that matter to you?
+That's the sort of thing computers are great at doing; why don't we just let your computer do that?
 
-This "Enrichable" SPI analyzer allows you to define a simple external script that can provide its own values to display for each SPI frame;
-you won't have to do the math in your head anymore!
+This "Enrichable" SPI analyzer allows you to define a simple external script written in your favorite language that can provide its own text and markers to display for each SPI frame.
+Now you can focus on solving your actual problem instead of interpreting inscrutible hex values.
 
 ## Compiling
 
@@ -433,4 +432,3 @@ By default, no markers are displayed.
 ```
 
 Data to display in the tabular "Decoded Protocols" section.
-By default, uses the bubble text for each channel.
