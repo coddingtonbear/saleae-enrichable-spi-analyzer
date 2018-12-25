@@ -82,11 +82,10 @@ class SC16IS7xxAnalyzer(EnrichableSpiAnalyzer):
                     return []
 
                 return [
-                    hex(value),
                     (
-                        "{readwrite} {register} {channel}".format(
-                            readwrite="R" if read else "W",
-                            register=hex(register),
+                        "{readwrite} {register} of channel {channel}".format(
+                            readwrite="Read" if read else "Write",
+                            register=self.get_register_name(register, read),
                             channel=self.CHANNEL_NAMES[channel]
                         )
                     ),
@@ -98,12 +97,13 @@ class SC16IS7xxAnalyzer(EnrichableSpiAnalyzer):
                         )
                     ),
                     (
-                        "{readwrite} {register} of channel {channel}".format(
-                            readwrite="Read" if read else "Write",
-                            register=self.get_register_name(register, read),
+                        "{readwrite} {register} {channel}".format(
+                            readwrite="R" if read else "W",
+                            register=hex(register),
                             channel=self.CHANNEL_NAMES[channel]
                         )
                     ),
+                    hex(value),
                 ]
             else:
                 if self.request_is_write:
