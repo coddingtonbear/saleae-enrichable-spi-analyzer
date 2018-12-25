@@ -46,7 +46,8 @@ class SC16IS7xxAnalyzer(EnrichableSpiAnalyzer):
 
     def __init__(self, *args, **kwargs):
         super(SC16IS7xxAnalyzer, self).__init__(*args, **kwargs)
-        self.request_phase = False
+        self.last_packet_id_mosi = None
+        self.last_packet_id_miso = None
         self.request_is_write = False
 
     def get_bubble_text(
@@ -61,9 +62,10 @@ class SC16IS7xxAnalyzer(EnrichableSpiAnalyzer):
         value: int
     ) -> List[str]:
         if direction == Channel.MOSI:
-            if not self.request_phase:
-                self.request_phase = True
+            request_phase = packet_id != self.last_packet_id_mosi
+            self.last_packet_id_mosi = packet_id
 
+            if request_phase:
                 read = value & 0x80
                 self.request_is_write = not read
                 register = (value >> 3) & 0xf
@@ -91,21 +93,24 @@ class SC16IS7xxAnalyzer(EnrichableSpiAnalyzer):
                         )
                     ),
                     (
-                        "{readwrite} {register} [{channel}]".format(
+                        "{readwrite} {register} {channel}".format(
                             readwrite="R" if read else "W",
-                            register=register,
+                            register=hex(register),
                             channel=self.CHANNEL_NAMES[channel]
                         )
-                    ),
-                    hex(value)
+                    )
                 ]
             else:
-                self.request_phase = False
                 if self.request_is_write:
                     return [hex(value)]
         else:
-            if not self.request_phase and not self.request_is_write:
+            request_phase = packet_id != self.last_packet_id_miso
+            self.last_packet_id_miso = packet_id
+
+            if not request_phase and not self.request_is_write:
                 return [hex(value)]
+            else:
+                return []
 
     def get_markers(
         self,

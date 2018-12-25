@@ -162,8 +162,8 @@ class EnrichableSpiAnalyzer(object):
 
         return [
             "MOSI: {mosi}; MISO: {miso}".format(
-                miso=miso_bubble[0] if miso_bubble else hex(miso_value),
                 mosi=mosi_bubble[0] if mosi_bubble else hex(mosi_value),
+                miso=miso_bubble[0] if miso_bubble else hex(miso_value),
             )
         ]
 
