@@ -4,13 +4,17 @@ import sys
 
 
 def get_bubble_text(line):
-    _, idx, start, end, direction, value = line.split('\t')
+    _, idx, start, end, f_type, flags, direction, value = (
+        line.split('\t')
+    )
 
     return "My sample message"
 
 
 def get_markers(line):
-    _, idx, sample_count, start, end, mosi, miso = line.split('\t')
+    _, idx, sample_count, start, end, f_type, flags, mosi, miso = (
+        line.split('\t')
+    )
 
     markers = []
 

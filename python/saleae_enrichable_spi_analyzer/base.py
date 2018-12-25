@@ -82,6 +82,8 @@ class EnrichableSpiAnalyzer(object):
         frame_index: int,
         start_sample: int,
         end_sample: int,
+        frame_type: int,
+        flags: int,
         direction: Channel,
         value: int
     ) -> str:
@@ -105,6 +107,8 @@ class EnrichableSpiAnalyzer(object):
         sample_count: int,
         start_sample: int,
         end_sample: int,
+        frame_type: int,
+        flags: int,
         mosi_value: int,
         miso_value: int
     ) -> List[Marker]:
@@ -127,6 +131,8 @@ class EnrichableSpiAnalyzer(object):
         frame_index: int,
         start_sample: int,
         end_sample: int,
+        frame_type: int,
+        flags: int,
         mosi_value: int,
         miso_value: int
     ) -> str:
@@ -135,6 +141,8 @@ class EnrichableSpiAnalyzer(object):
                 frame_index,
                 start_sample,
                 end_sample,
+                frame_type,
+                flags,
                 Channel.MISO,
                 miso_value,
             ),
@@ -142,6 +150,8 @@ class EnrichableSpiAnalyzer(object):
                 frame_index,
                 start_sample,
                 end_sample,
+                frame_type,
+                flags,
                 Channel.MOSI,
                 mosi_value,
             ),
@@ -195,41 +205,51 @@ class EnrichableSpiAnalyzer(object):
         for line in fileinput.input('-'):
             line = line.strip()
 
-            logger.debug(">> %s", line)
+            logger.debug(">> %s", line.replace('\t', ' \\t '))
 
             output_line = ""
             if line.startswith('bubble\t'):
-                _, idx, start, end, direction, value = line.split("\t")
+                _, idx, start, end, f_type, flags, direction, value = (
+                    line.split("\t")
+                )
 
                 result = self._get_bubble_text(
                     int(idx, 16),
                     int(start, 16),
                     int(end, 16),
+                    int(f_type, 16),
+                    int(flags, 16),
                     Channel[direction.upper()],
                     int(value, 16)
                 )
                 if result:
                     output_line = str(result)
             elif line.startswith('marker\t'):
-                _, idx, sample_count, start, end, mosi, miso = line.split("\t")
+                _, idx, count, start, end, f_type, flags, mosi, miso = (
+                    line.split("\t")
+                )
 
                 results = self._get_markers(
                     int(idx, 16),
-                    int(sample_count, 16),
+                    int(count, 16),
                     int(start, 16),
                     int(end, 16),
+                    int(f_type, 16),
+                    int(flags, 16),
                     int(mosi, 16),
                     int(miso, 16)
                 )
                 if results:
                     output_line = '\n'.join([str(r) for r in results]) + '\n'
             elif line.startswith('tabular\t'):
-                _, idx, start, end, mosi, miso = line.split("\t")
+                _, idx, start, end, f_type, flags, mosi, miso = line.split("\t")
 
                 result = self._get_tabular(
                     int(idx, 16),
                     int(start, 16),
                     int(end, 16),
+                    int(f_type, 16),
+                    int(flags, 16),
                     int(mosi, 16),
                     int(miso, 16)
                 )

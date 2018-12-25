@@ -123,13 +123,15 @@ For each frame found by Saleae Logic, your script will receive on stdin the foll
   starting sample ID.
 * ending sample ID: A hexadecimal integer indicating the frame's
   ending sample ID.
+* type: A hexadecimal integer indicating the frame's type;
+* flags: A hexadecimal integer indicating the frame's flags.
 * "mosi" or "miso"
 * value: A hexadecimal integer indicating the frame's value. 
 
 Example:
 
 ```
-bubble	ab6f	3ae3012	3ae309b9	mosi	c6
+bubble	ab6f	3ae3012	3ae309b9	0	0	mosi	c6
 ```
 
 Your script should respond with the text to display above this frame in the analyzer;
@@ -154,13 +156,15 @@ For each frame found by Saleae Logic, your script will receive on stdin the foll
   starting sample ID.
 * ending sample ID: A hexadecimal integer indicating the frame's
   ending sample ID.
+* type: A hexadecimal integer indicating the frame's type;
+* flags: A hexadecimal integer indicating the frame's flags.
 * mosi value: A hexadecimal integer indicating the frame's mosi value.
 * miso value: A hexadecimal integer indicating the frame's miso value.
 
 Example:
 
 ```
-tabular	ab6f	3ae3012	3ae309b9	c6	fa
+tabular	ab6f	3ae3012	3ae309b9	0	0	c6	fa
 ```
 
 Your script should respond with the text to show in the tabular results (on the bottom right side of the UI).
@@ -186,13 +190,15 @@ For every sample point, your script will receive on stdin the following tab-deli
   starting sample ID.
 * ending sample ID: A hexadecimal integer indicating the frame's
   ending sample ID.
+* type: A hexadecimal integer indicating the frame's type;
+* flags: A hexadecimal integer indicating the frame's flags.
 * mosi value: A hexadecimal integer indicating the frame's mosi value.
 * miso value: A hexadecimal integer indicating the frame's miso value.
 
 Example:
 
 ```
-marker	ab6f	8	3ae3012	3ae309b9	c6	fa
+marker	ab6f	8	3ae3012	3ae309b9	0	0	c6	fa
 ```
 
 Your script should respond with any number lines, each composed of three tab-separated values;
@@ -294,6 +300,8 @@ class MySimpleAnalyzer(EnrichableSpiAnalyzer):
         frame_index: int,
         start_sample: int,
         end_sample: int,
+        frame_type: int,
+        flags: int,
         direction: Channel,
         value: int
     ) -> str:
@@ -307,6 +315,8 @@ class MySimpleAnalyzer(EnrichableSpiAnalyzer):
         sample_count: int,
         start_sample: int,
         end_sample: int,
+        frame_type: int,
+        flags: int,
         mosi_value: int,
         miso_value: int
     ) -> List[Marker]:
@@ -328,13 +338,13 @@ if __name__ == '__main__':
 
 The following methods can be implemented for interacting with Saleae Logic:
 
-* `get_bubble_text(frame_index, start_sample, end_sample, direction, value)`:
+* `get_bubble_text(frame_index, start_sample, end_sample, frame_type, flags, direction, value)`:
   Set the bubble text (the text shown in blue abov the frame) for this frame.
   By default, no bubble is shown.
-* `get_markers(frame_index, sample_count, start_sample, end_sample, mosi_value, miso_value)`:
+* `get_markers(frame_index, sample_count, start_sample, end_sample, frame_type, flags, mosi_value, miso_value)`:
   Return markers to display at given sample points.
   By default, no markers are displayed.
-* `get_tabular(frame_index, start_sample, end_sample, mosi_value, miso_value)`:
+* `get_tabular(frame_index, start_sample, end_sample, frame_type, flags, mosi_value, miso_value)`:
   Data to display in the tabular "Decoded Protocols" section.
   By default, uses the bubble text for each channel.
 

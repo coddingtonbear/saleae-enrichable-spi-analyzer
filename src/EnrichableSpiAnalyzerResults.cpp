@@ -37,6 +37,10 @@ void EnrichableSpiAnalyzerResults::GenerateBubbleText( U64 frame_index, Channel&
 			outputStream << UNIT_SEPARATOR;
 			outputStream << std::hex << frame.mEndingSampleInclusive;
 			outputStream << UNIT_SEPARATOR;
+			outputStream << std::hex << (U64)frame.mType;
+			outputStream << UNIT_SEPARATOR;
+			outputStream << std::hex << (U64)frame.mFlags;
+			outputStream << UNIT_SEPARATOR;
 
 			char bubbleText[256];
 			if( channel == mSettings->mMosiChannel )
@@ -168,6 +172,10 @@ void EnrichableSpiAnalyzerResults::GenerateFrameTabularText( U64 frame_index, Di
 		outputStream << std::hex << frame.mStartingSampleInclusive;
 		outputStream << UNIT_SEPARATOR;
 		outputStream << std::hex << frame.mEndingSampleInclusive;
+		outputStream << UNIT_SEPARATOR;
+		outputStream << std::hex << (U64)frame.mType;
+		outputStream << UNIT_SEPARATOR;
+		outputStream << std::hex << (U64)frame.mFlags;
 		outputStream << UNIT_SEPARATOR;
 		outputStream << std::hex << frame.mData1;
 		outputStream << UNIT_SEPARATOR;

@@ -54,6 +54,8 @@ class SC16IS7xxAnalyzer(EnrichableSpiAnalyzer):
         frame_index: int,
         start_sample: int,
         end_sample: int,
+        frame_type: int,
+        flags: int,
         direction: Channel,
         value: int
     ) -> str:
@@ -93,6 +95,8 @@ class SC16IS7xxAnalyzer(EnrichableSpiAnalyzer):
         sample_count: int,
         start_sample: int,
         end_sample: int,
+        frame_type: int,
+        flags: int,
         mosi_value: int,
         miso_value: int
     ) -> List[Marker]:

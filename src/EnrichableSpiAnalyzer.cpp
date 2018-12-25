@@ -396,6 +396,7 @@ void EnrichableSpiAnalyzer::GetWord()
 	result_frame.mData1 = mosi_word;
 	result_frame.mData2 = miso_word;
 	result_frame.mFlags = 0;
+	result_frame.mType = 0;
 	U64 frame_index = mResults->AddFrame( result_frame );
 
 	//save the resuls:
@@ -418,6 +419,10 @@ void EnrichableSpiAnalyzer::GetWord()
 		outputStream << std::hex << result_frame.mStartingSampleInclusive;
 		outputStream << UNIT_SEPARATOR;
 		outputStream << std::hex << result_frame.mEndingSampleInclusive;
+		outputStream << UNIT_SEPARATOR;
+		outputStream << std::hex << (U64)result_frame.mType;
+		outputStream << UNIT_SEPARATOR;
+		outputStream << std::hex << (U64)result_frame.mFlags;
 		outputStream << UNIT_SEPARATOR;
 		outputStream << std::hex << mosi_word;
 		outputStream << UNIT_SEPARATOR;
