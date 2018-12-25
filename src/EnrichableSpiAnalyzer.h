@@ -49,6 +49,9 @@ public:
 	bool featureBubble;
 	bool featureTabular;
 protected: //functions
+	void StartSubprocess();
+	void StopSubprocess();
+
 	void Setup();
 	void AdvanceToActiveEnableEdge();
 	bool IsInitialClockPolarityCorrect();

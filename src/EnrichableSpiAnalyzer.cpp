@@ -58,8 +58,20 @@ void EnrichableSpiAnalyzer::WorkerThread()
 {
 	Setup();
 
+	StartSubprocess();
+
 	AdvanceToActiveEnableEdgeWithCorrectClockPolarity();
 
+	for( ; ; )
+	{
+		GetWord();
+		CheckIfThreadShouldExit();
+	}
+
+	StopSubprocess();
+}
+
+void EnrichableSpiAnalyzer::StartSubprocess() {
 	if(pipe(inpipefd) < 0) {
 		std::cerr << "Failed to create input pipe: ";
 		std::cerr << errno;
@@ -127,13 +139,9 @@ void EnrichableSpiAnalyzer::WorkerThread()
 	featureBubble = GetFeatureEnablement(BUBBLE_PREFIX);
 	featureMarker = GetFeatureEnablement(MARKER_PREFIX);
 	featureTabular = GetFeatureEnablement(TABULAR_PREFIX);
+}
 
-	for( ; ; )
-	{
-		GetWord();
-		CheckIfThreadShouldExit();
-	}
-
+void EnrichableSpiAnalyzer::StopSubprocess() {
 	close(inpipefd[0]);
 	close(outpipefd[1]);
 
