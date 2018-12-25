@@ -10,13 +10,15 @@
 
 #include <unistd.h>
 #include <fcntl.h>
-#include <sys/wait.h>
-#include <sys/prctl.h>
 #include <signal.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
 #include <wordexp.h>
+
+#if defined(__linux__)
+	#include <sys/prctl.h>
+#endif
 
  
 //enum SpiBubbleType { SpiData, SpiError };
@@ -102,7 +104,9 @@ void EnrichableSpiAnalyzer::StartSubprocess() {
 			exit(errno);
 		}
 
-		prctl(PR_SET_PDEATHSIG, SIGINT);
+		#if defined(__linux__)
+			prctl(PR_SET_PDEATHSIG, SIGINT);
+		#endif
 
 		wordexp_t cmdParsed;
 		char *args[25];
