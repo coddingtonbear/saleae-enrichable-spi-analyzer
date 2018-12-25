@@ -181,6 +181,7 @@ you could respond with the below to show that in the tabular results:
 
 ```
 (R) RXLVL Ch A
+
 ```
 
 If you would not like to set a value, return an empty line.
