@@ -135,7 +135,7 @@ class EnrichableSpiAnalyzer(object):
         flags: int,
         mosi_value: int,
         miso_value: int
-    ) -> str:
+    ) -> List[str]:
         miso_bubble = self.get_bubble_text(
             frame_index,
             start_sample,
@@ -155,10 +155,12 @@ class EnrichableSpiAnalyzer(object):
             mosi_value,
         )
 
-        return "MOSI: {mosi}; MISO: {miso}".format(
-            miso=miso_bubble[0] if miso_bubble else hex(miso_value),
-            mosi=mosi_bubble[0] if mosi_bubble else hex(mosi_value),
-        )
+        return [
+            "MOSI: {mosi}; MISO: {miso}".format(
+                miso=miso_bubble[0] if miso_bubble else hex(miso_value),
+                mosi=mosi_bubble[0] if mosi_bubble else hex(mosi_value),
+            )
+        ]
 
     def _get_tabular(self, *args, **kwargs) -> str:
         try:
@@ -249,7 +251,7 @@ class EnrichableSpiAnalyzer(object):
                     line.split("\t")
                 )
 
-                result = self._get_tabular(
+                results = self._get_tabular(
                     int(idx, 16),
                     int(start, 16),
                     int(end, 16),
@@ -258,8 +260,8 @@ class EnrichableSpiAnalyzer(object):
                     int(mosi, 16),
                     int(miso, 16)
                 )
-                if result:
-                    output_line = str(result)
+                if results:
+                    output_line = '\n'.join([str(r) for r in results]) + '\n'
             elif line.startswith('feature\t'):
                 _, name = line.split("\t")
 

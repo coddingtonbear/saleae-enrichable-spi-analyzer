@@ -134,9 +134,11 @@ Example:
 bubble	ab6f	3ae3012	3ae309b9	0	0	mosi	c6
 ```
 
-Your script should respond with at least one message to display above this frame in the analyzer.
+If you would like a bubble to appear, your script should respond with at least one message to display above this frame in the analyzer.
 Given that space available for displaying your message may vary depending upon how far zoomed-in you are,
-it is recommended that you return multiple messages of differing levels of verbosity.  Send an empty newline to finish your list of messages. For example, if the above message data indicates that this frame is a read of the RXLVL register on channel A,
+it is recommended that you return multiple messages of differing levels of verbosity.
+Send an empty newline to finish your list of messages, and if you would not like a bubble displayed at all, send only an empty line.
+For example, if the above message data indicates that this frame is a read of the RXLVL register on channel A,
 you could respond with this:
 
 ```
@@ -172,7 +174,8 @@ Example:
 tabular	ab6f	3ae3012	3ae309b9	0	0	c6	fa
 ```
 
-Your script should respond with the text to show in the tabular results (on the bottom right side of the UI).
+Your script should respond with any lines you would like to appear in the tabular results on the bottom right side of the UI.
+End your list of lines by sending an empty line.
 For example, if the above frame was a read of the RXLVL register on channel A,
 you could respond with the below to show that in the tabular results:
 

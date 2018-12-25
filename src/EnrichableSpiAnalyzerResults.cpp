@@ -183,17 +183,22 @@ void EnrichableSpiAnalyzerResults::GenerateFrameTabularText( U64 frame_index, Di
 		outputStream << LINE_SEPARATOR;
 
 		std::string value = outputStream.str();
-		char tabularText[512];
-		mAnalyzer->GetScriptResponse(
-			value.c_str(),
-			value.length(),
-			tabularText,
-			512
-		);
 
-		if(strlen(tabularText) > 0) {
-			AddTabularText(tabularText);
+		mAnalyzer->LockSubprocess();
+		mAnalyzer->SendOutputLine(value.c_str(), value.length());
+		char tabularText[512];
+		while(true) {
+			mAnalyzer->GetInputLine(
+				tabularText,
+				512
+			);
+			if(strlen(tabularText) > 0) {
+				AddTabularText(tabularText);
+			} else {
+				break;
+			}
 		}
+		mAnalyzer->UnlockSubprocess();
 	} else {
 		bool mosi_used = true;
 		bool miso_used = true;
