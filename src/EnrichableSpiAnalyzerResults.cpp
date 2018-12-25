@@ -42,7 +42,7 @@ void EnrichableSpiAnalyzerResults::GenerateBubbleText( U64 frame_index, Channel&
 			outputStream << std::hex << (U64)frame.mFlags;
 			outputStream << UNIT_SEPARATOR;
 
-			char bubbleText[256];
+			std::string value;
 			if( channel == mSettings->mMosiChannel )
 			{
 				outputStream << MOSI_PREFIX;
@@ -50,13 +50,7 @@ void EnrichableSpiAnalyzerResults::GenerateBubbleText( U64 frame_index, Channel&
 				outputStream << std::hex << frame.mData1;
 				outputStream << LINE_SEPARATOR;
 
-				std::string value = outputStream.str();
-				mAnalyzer->GetScriptResponse(
-					value.c_str(),
-					value.length(),
-					bubbleText,
-					256
-				);
+				value = outputStream.str();
 			}
 			else
 			{
@@ -65,17 +59,23 @@ void EnrichableSpiAnalyzerResults::GenerateBubbleText( U64 frame_index, Channel&
 				outputStream << std::hex << frame.mData2;
 				outputStream << LINE_SEPARATOR;
 
-				std::string value = outputStream.str();
-				mAnalyzer->GetScriptResponse(
-					value.c_str(),
-					value.length(),
+				value = outputStream.str();
+			}
+			mAnalyzer->LockSubprocess();
+			mAnalyzer->SendOutputLine(value.c_str(), value.length());
+			char bubbleText[256];
+			while(true) {
+				mAnalyzer->GetInputLine(
 					bubbleText,
 					256
 				);
+				if(strlen(bubbleText) > 0) {
+					AddResultString(bubbleText);
+				} else {
+					break;
+				}
 			}
-			if(strlen(bubbleText) > 0) {
-				AddResultString(bubbleText);
-			}
+			mAnalyzer->UnlockSubprocess();
 		} else {
 			if( channel == mSettings->mMosiChannel )
 			{

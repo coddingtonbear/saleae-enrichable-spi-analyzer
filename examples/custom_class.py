@@ -58,7 +58,7 @@ class SC16IS7xxAnalyzer(EnrichableSpiAnalyzer):
         flags: int,
         direction: Channel,
         value: int
-    ) -> str:
+    ) -> List[str]:
         if direction == Channel.MOSI:
             if not self.request_phase:
                 self.request_phase = True
@@ -74,20 +74,37 @@ class SC16IS7xxAnalyzer(EnrichableSpiAnalyzer):
                     self.request_phase = False
                     return
 
-                return (
-                    "({readwrite}) {register} Ch {channel}".format(
-                        readwrite="R" if read else "W",
-                        register=self.get_register_name(register, read),
-                        channel=self.CHANNEL_NAMES[channel]
-                    )
-                )
+                return [
+                    (
+                        "{readwrite} {register} of channel {channel}".format(
+                            readwrite="Read" if read else "Write",
+                            register=self.get_register_name(register, read),
+                            channel=self.CHANNEL_NAMES[channel]
+                        )
+                    ),
+                    (
+                        "{readwrite} {register} [{channel}]".format(
+                            readwrite="R" if read else "W",
+                            register=self.get_register_name(register, read),
+                            channel=self.CHANNEL_NAMES[channel]
+                        )
+                    ),
+                    (
+                        "{readwrite} {register} [{channel}]".format(
+                            readwrite="R" if read else "W",
+                            register=register,
+                            channel=self.CHANNEL_NAMES[channel]
+                        )
+                    ),
+                    hex(value)
+                ]
             else:
                 self.request_phase = False
                 if self.request_is_write:
-                    return hex(value)
+                    return [hex(value)]
         else:
             if not self.request_phase and not self.request_is_write:
-                return hex(value)
+                return [hex(value)]
 
     def get_markers(
         self,

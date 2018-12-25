@@ -134,12 +134,17 @@ Example:
 bubble	ab6f	3ae3012	3ae309b9	0	0	mosi	c6
 ```
 
-Your script should respond with the text to display above this frame in the analyzer;
-for example, if the above message data indicates that this frame is a read of the RXLVL register on channel A,
+Your script should respond with at least one message to display above this frame in the analyzer.
+Given that space available for displaying your message may vary depending upon how far zoomed-in you are,
+it is recommended that you return multiple messages of differing levels of verbosity.  Send an empty newline to finish your list of messages. For example, if the above message data indicates that this frame is a read of the RXLVL register on channel A,
 you could respond with this:
 
 ```
+Request read of RXLVL on Channel A
 (R) RXLVL Ch A
+R RXLVL [A]
+0xc6
+
 ```
 
 If you would not like to set a value, return an empty line.
@@ -304,10 +309,10 @@ class MySimpleAnalyzer(EnrichableSpiAnalyzer):
         flags: int,
         direction: Channel,
         value: int
-    ) -> str:
-        return (
+    ) -> List[str]:
+        return [
             "This message will be displayed above every frame in the blue bubble"
-        )
+        ]
 
     def get_markers(
         self,
@@ -340,7 +345,8 @@ The following methods can be implemented for interacting with Saleae Logic:
 
 * `get_bubble_text(frame_index, start_sample, end_sample, frame_type, flags, direction, value)`:
   Set the bubble text (the text shown in blue abov the frame) for this frame.
-  By default, no bubble is shown.
+  By default, no bubble is shown.  It is recommended that you return multiple
+  strings of varying lengths.
 * `get_markers(frame_index, sample_count, start_sample, end_sample, frame_type, flags, mosi_value, miso_value)`:
   Return markers to display at given sample points.
   By default, no markers are displayed.

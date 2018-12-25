@@ -38,17 +38,17 @@ public:
 		char* inBuffer,
 		uint inBufferLength
 	);
+	bool SendOutputLine(const char* buffer, uint bufferLength);
+	bool GetInputLine(char* buffer, uint bufferLength);
+	void LockSubprocess();
+	void UnlockSubprocess();
 	bool GetFeatureEnablement(const char* feature);
 	AnalyzerResults::MarkerType GetMarkerType(char* buffer, uint bufferLength);
 
 	bool featureMarker;
 	bool featureBubble;
 	bool featureTabular;
-
 protected: //functions
-	bool SendOutputLine(const char* buffer, uint bufferLength);
-	bool GetInputLine(char* buffer, uint bufferLength);
-
 	void Setup();
 	void AdvanceToActiveEnableEdge();
 	bool IsInitialClockPolarityCorrect();

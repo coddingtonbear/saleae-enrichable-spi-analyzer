@@ -8,7 +8,7 @@ def get_bubble_text(line):
         line.split('\t')
     )
 
-    return "My sample message"
+    return ["My sample message"]
 
 
 def get_markers(line):
@@ -37,7 +37,9 @@ def main(logfile, *args):
 
         result = ""
         if line.startswith('bubble\t'):
-            result = get_bubble_text(line)
+            results = get_bubble_text(line)
+            if results:
+                result = "\n".join(results) + "\n"
         elif line.startswith('marker\t'):
             markers = get_markers(line)
             if markers:

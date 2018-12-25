@@ -86,7 +86,7 @@ class EnrichableSpiAnalyzer(object):
         flags: int,
         direction: Channel,
         value: int
-    ) -> str:
+    ) -> List[str]:
         return ""
 
     def _get_bubble_text(self, *args, **kwargs) -> str:
@@ -136,25 +136,28 @@ class EnrichableSpiAnalyzer(object):
         mosi_value: int,
         miso_value: int
     ) -> str:
+        miso_bubble = self.get_bubble_text(
+            frame_index,
+            start_sample,
+            end_sample,
+            frame_type,
+            flags,
+            Channel.MISO,
+            miso_value,
+        )
+        mosi_bubble = self.get_bubble_text(
+            frame_index,
+            start_sample,
+            end_sample,
+            frame_type,
+            flags,
+            Channel.MOSI,
+            mosi_value,
+        )
+
         return "MOSI: {mosi}; MISO: {miso}".format(
-            miso=self.get_bubble_text(
-                frame_index,
-                start_sample,
-                end_sample,
-                frame_type,
-                flags,
-                Channel.MISO,
-                miso_value,
-            ),
-            mosi=self.get_bubble_text(
-                frame_index,
-                start_sample,
-                end_sample,
-                frame_type,
-                flags,
-                Channel.MOSI,
-                mosi_value,
-            ),
+            miso=miso_bubble[0] if miso_bubble else hex(miso_value),
+            mosi=mosi_bubble[0] if mosi_bubble else hex(mosi_value),
         )
 
     def _get_tabular(self, *args, **kwargs) -> str:
@@ -205,7 +208,7 @@ class EnrichableSpiAnalyzer(object):
         for line in fileinput.input('-'):
             line = line.strip()
 
-            logger.debug(">> %s", line.replace('\t', ' \\t '))
+            logger.debug(">> %s", line)
 
             output_line = ""
             if line.startswith('bubble\t'):
@@ -213,7 +216,7 @@ class EnrichableSpiAnalyzer(object):
                     line.split("\t")
                 )
 
-                result = self._get_bubble_text(
+                results = self._get_bubble_text(
                     int(idx, 16),
                     int(start, 16),
                     int(end, 16),
@@ -222,8 +225,8 @@ class EnrichableSpiAnalyzer(object):
                     Channel[direction.upper()],
                     int(value, 16)
                 )
-                if result:
-                    output_line = str(result)
+                if results:
+                    output_line = '\n'.join([str(r) for r in results]) + '\n'
             elif line.startswith('marker\t'):
                 _, idx, count, start, end, f_type, flags, mosi, miso = (
                     line.split("\t")
@@ -242,7 +245,9 @@ class EnrichableSpiAnalyzer(object):
                 if results:
                     output_line = '\n'.join([str(r) for r in results]) + '\n'
             elif line.startswith('tabular\t'):
-                _, idx, start, end, f_type, flags, mosi, miso = line.split("\t")
+                _, idx, start, end, f_type, flags, mosi, miso = (
+                    line.split("\t")
+                )
 
                 result = self._get_tabular(
                     int(idx, 16),

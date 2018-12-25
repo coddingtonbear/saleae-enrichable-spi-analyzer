@@ -166,6 +166,14 @@ bool EnrichableSpiAnalyzer::GetFeatureEnablement(const char* feature) {
 	return true;
 }
 
+void EnrichableSpiAnalyzer::LockSubprocess() {
+	subprocessLock.lock();
+}
+
+void EnrichableSpiAnalyzer::UnlockSubprocess() {
+	subprocessLock.unlock();
+}
+
 void EnrichableSpiAnalyzer::AdvanceToActiveEnableEdgeWithCorrectClockPolarity()
 {
 	mResults->CommitPacketAndStartNewPacket();
@@ -431,7 +439,7 @@ void EnrichableSpiAnalyzer::GetWord()
 
 		std::string outputValue = outputStream.str();
 
-		subprocessLock.lock();
+		LockSubprocess();
 		SendOutputLine(
 			outputValue.c_str(),
 			outputValue.length()
@@ -475,7 +483,7 @@ void EnrichableSpiAnalyzer::GetWord()
 				break;
 			}
 		}
-		subprocessLock.unlock();
+		UnlockSubprocess();
 	}
 	
 	mResults->CommitResults();
@@ -490,10 +498,10 @@ bool EnrichableSpiAnalyzer::GetScriptResponse(
 	char* inBuffer,
 	uint inBufferLength
 ) {
-	subprocessLock.lock();
+	LockSubprocess();
 	SendOutputLine(outBuffer, outBufferLength);
 	GetInputLine(inBuffer, inBufferLength);
-	subprocessLock.unlock();
+	UnlockSubprocess();
 }
 
 bool EnrichableSpiAnalyzer::SendOutputLine(const char* buffer, uint bufferLength) {
@@ -516,6 +524,10 @@ bool EnrichableSpiAnalyzer::GetInputLine(char* buffer, uint bufferLength) {
 		//std::cerr << buffer[bufferPos];
 
 		bufferPos++;
+
+		if(bufferPos == bufferLength - 1) {
+			break;
+		}
 	}
 	buffer[bufferPos] = '\0';
 
