@@ -4,7 +4,7 @@ import sys
 
 
 def get_bubble_text(line):
-    _, idx, start, end, f_type, flags, direction, value = (
+    _, pkt, idx, start, end, f_type, flags, direction, value = (
         line.split('\t')
     )
 
@@ -12,7 +12,7 @@ def get_bubble_text(line):
 
 
 def get_markers(line):
-    _, idx, sample_count, start, end, f_type, flags, mosi, miso = (
+    _, pkt, idx, sample_count, start, end, f_type, flags, mosi, miso = (
         line.split('\t')
     )
 

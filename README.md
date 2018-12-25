@@ -118,6 +118,8 @@ but that line may be empty if you have no desire to handle the received message 
 For each frame found by Saleae Logic, your script will receive on stdin the following tab-delimited fields ending with a newline character:
 
 * "bubble"
+* packet id: A hexadecimal integer indicating the packet that this
+  frame is a member of.
 * frame index: A hexadecimal integer indicating this frame's index.
 * starting sample ID: A hexadecimal integer indicating the frame's
   starting sample ID.
@@ -131,7 +133,7 @@ For each frame found by Saleae Logic, your script will receive on stdin the foll
 Example:
 
 ```
-bubble	ab6f	3ae3012	3ae309b9	0	0	mosi	c6
+bubble	84ac	ab6f	3ae3012	3ae309b9	0	0	mosi	c6
 ```
 
 If you would like a bubble to appear, your script should respond with at least one message to display above this frame in the analyzer.
@@ -158,6 +160,8 @@ If you would not like to set a value, return an empty line.
 For each frame found by Saleae Logic, your script will receive on stdin the following tab-delimited fields ending with a newline character:
 
 * "tabular"
+* packet id: A hexadecimal integer indicating the packet that this
+  frame is a member of.
 * frame index: A hexadecimal integer indicating this frame's index.
 * starting sample ID: A hexadecimal integer indicating the frame's
   starting sample ID.
@@ -171,7 +175,7 @@ For each frame found by Saleae Logic, your script will receive on stdin the foll
 Example:
 
 ```
-tabular	ab6f	3ae3012	3ae309b9	0	0	c6	fa
+tabular	84ac	ab6f	3ae3012	3ae309b9	0	0	c6	fa
 ```
 
 Your script should respond with any lines you would like to appear in the tabular results on the bottom right side of the UI.
@@ -193,6 +197,8 @@ If you would not like to set a value, return an empty line.
 For every sample point, your script will receive on stdin the following tab-delimited fields ending with a newline character:
 
 * "marker"
+* packet id: A hexadecimal integer indicating the packet that this
+  frame is a member of.
 * frame index: A hexadecimal integer indicating this frame's index.
 * sample count: A hexadecimal number of samples taken as part of this frame.
 * starting sample ID: A hexadecimal integer indicating the frame's
@@ -207,7 +213,7 @@ For every sample point, your script will receive on stdin the following tab-deli
 Example:
 
 ```
-marker	ab6f	8	3ae3012	3ae309b9	0	0	c6	fa
+marker	84ac	ab6f	8	3ae3012	3ae309b9	0	0	c6	fa
 ```
 
 Your script should respond with any number lines, each composed of three tab-separated values;
@@ -297,15 +303,17 @@ here is a basic example:
 
 ```python
 import sys
+from typing import List, Optional
 
 from saleae_enrichable_spi_analyzer import (
-    EnrichableSpiAnalyzer, Channel, Marker, MarkerType
+    Channel, EnrichableSpiAnalyzer, Marker, MarkerType
 )
 
 
 class MySimpleAnalyzer(EnrichableSpiAnalyzer):
     def get_bubble_text(
         self,
+        packet_id: Optional[int],
         frame_index: int,
         start_sample: int,
         end_sample: int,
@@ -320,6 +328,7 @@ class MySimpleAnalyzer(EnrichableSpiAnalyzer):
 
     def get_markers(
         self,
+        packet_id: Optional[int],
         frame_index: int,
         sample_count: int,
         start_sample: int,
@@ -347,14 +356,14 @@ if __name__ == '__main__':
 
 The following methods can be implemented for interacting with Saleae Logic:
 
-* `get_bubble_text(frame_index, start_sample, end_sample, frame_type, flags, direction, value)`:
+* `get_bubble_text(packet_id, frame_index, start_sample, end_sample, frame_type, flags, direction, value)`:
   Set the bubble text (the text shown in blue abov the frame) for this frame.
   By default, no bubble is shown.  It is recommended that you return multiple
   strings of varying lengths.
-* `get_markers(frame_index, sample_count, start_sample, end_sample, frame_type, flags, mosi_value, miso_value)`:
+* `get_markers(packet_id, frame_index, sample_count, start_sample, end_sample, frame_type, flags, mosi_value, miso_value)`:
   Return markers to display at given sample points.
   By default, no markers are displayed.
-* `get_tabular(frame_index, start_sample, end_sample, frame_type, flags, mosi_value, miso_value)`:
+* `get_tabular(packet_id, frame_index, start_sample, end_sample, frame_type, flags, mosi_value, miso_value)`:
   Data to display in the tabular "Decoded Protocols" section.
   By default, uses the bubble text for each channel.
 

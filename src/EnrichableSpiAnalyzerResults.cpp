@@ -29,7 +29,13 @@ void EnrichableSpiAnalyzerResults::GenerateBubbleText( U64 frame_index, Channel&
 	if( ( frame.mFlags & SPI_ERROR_FLAG ) == 0 )
 	{
 		if(mAnalyzer->featureBubble) {
+			U64 packet_id = GetPacketContainingFrameSequential( frame_index );
+
 			outputStream << BUBBLE_PREFIX;
+			outputStream << UNIT_SEPARATOR;
+			if(packet_id != INVALID_RESULT_INDEX) {
+				outputStream << std::hex << packet_id;
+			}
 			outputStream << UNIT_SEPARATOR;
 			outputStream << std::hex << frame_index;
 			outputStream << UNIT_SEPARATOR;
@@ -163,9 +169,14 @@ void EnrichableSpiAnalyzerResults::GenerateFrameTabularText( U64 frame_index, Di
 	Frame frame = GetFrame( frame_index );
 
 	if(mAnalyzer->featureTabular) {
+		U64 packet_id = GetPacketContainingFrameSequential( frame_index );
 		std::stringstream outputStream;
 
 		outputStream << TABULAR_PREFIX;
+		outputStream << UNIT_SEPARATOR;
+		if(packet_id != INVALID_RESULT_INDEX) {
+			outputStream << std::hex << packet_id;
+		}
 		outputStream << UNIT_SEPARATOR;
 		outputStream << std::hex << frame_index;
 		outputStream << UNIT_SEPARATOR;

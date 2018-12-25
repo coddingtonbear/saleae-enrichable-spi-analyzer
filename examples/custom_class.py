@@ -1,8 +1,8 @@
 import sys
-from typing import List
+from typing import List, Optional
 
 from saleae_enrichable_spi_analyzer import (
-    EnrichableSpiAnalyzer, Channel, Marker, MarkerType
+    Channel, EnrichableSpiAnalyzer, Marker, MarkerType
 )
 
 
@@ -51,6 +51,7 @@ class SC16IS7xxAnalyzer(EnrichableSpiAnalyzer):
 
     def get_bubble_text(
         self,
+        packet_id: Optional[int],
         frame_index: int,
         start_sample: int,
         end_sample: int,
@@ -108,6 +109,7 @@ class SC16IS7xxAnalyzer(EnrichableSpiAnalyzer):
 
     def get_markers(
         self,
+        packet_id: Optional[int],
         frame_index: int,
         sample_count: int,
         start_sample: int,

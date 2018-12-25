@@ -3,7 +3,7 @@ import enum
 import fileinput
 import logging
 import sys
-from typing import List
+from typing import List, Optional
 
 
 logger = logging.getLogger(__name__)
@@ -79,6 +79,7 @@ class EnrichableSpiAnalyzer(object):
 
     def get_bubble_text(
         self,
+        packet_id: Optional[int],
         frame_index: int,
         start_sample: int,
         end_sample: int,
@@ -103,6 +104,7 @@ class EnrichableSpiAnalyzer(object):
 
     def get_markers(
         self,
+        packet_id: Optional[int],
         frame_index: int,
         sample_count: int,
         start_sample: int,
@@ -128,6 +130,7 @@ class EnrichableSpiAnalyzer(object):
 
     def get_tabular(
         self,
+        packet_id: Optional[int],
         frame_index: int,
         start_sample: int,
         end_sample: int,
@@ -137,6 +140,7 @@ class EnrichableSpiAnalyzer(object):
         miso_value: int
     ) -> List[str]:
         miso_bubble = self.get_bubble_text(
+            packet_id,
             frame_index,
             start_sample,
             end_sample,
@@ -146,6 +150,7 @@ class EnrichableSpiAnalyzer(object):
             miso_value,
         )
         mosi_bubble = self.get_bubble_text(
+            packet_id,
             frame_index,
             start_sample,
             end_sample,
@@ -214,11 +219,12 @@ class EnrichableSpiAnalyzer(object):
 
             output_line = ""
             if line.startswith('bubble\t'):
-                _, idx, start, end, f_type, flags, direction, value = (
+                _, pkt, idx, start, end, f_type, flags, direction, value = (
                     line.split("\t")
                 )
 
                 results = self._get_bubble_text(
+                    int(pkt, 16) if pkt else None,
                     int(idx, 16),
                     int(start, 16),
                     int(end, 16),
@@ -230,11 +236,12 @@ class EnrichableSpiAnalyzer(object):
                 if results:
                     output_line = '\n'.join([str(r) for r in results]) + '\n'
             elif line.startswith('marker\t'):
-                _, idx, count, start, end, f_type, flags, mosi, miso = (
+                _, pkt, idx, count, start, end, f_type, flags, mosi, miso = (
                     line.split("\t")
                 )
 
                 results = self._get_markers(
+                    int(pkt, 16) if pkt else None,
                     int(idx, 16),
                     int(count, 16),
                     int(start, 16),
@@ -247,11 +254,12 @@ class EnrichableSpiAnalyzer(object):
                 if results:
                     output_line = '\n'.join([str(r) for r in results]) + '\n'
             elif line.startswith('tabular\t'):
-                _, idx, start, end, f_type, flags, mosi, miso = (
+                _, pkt, idx, start, end, f_type, flags, mosi, miso = (
                     line.split("\t")
                 )
 
                 results = self._get_tabular(
+                    int(pkt, 16) if pkt else None,
                     int(idx, 16),
                     int(start, 16),
                     int(end, 16),
