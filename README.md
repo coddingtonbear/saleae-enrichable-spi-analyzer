@@ -281,6 +281,19 @@ Features that are disabled will revert to the standard SPI Analyzer implementati
 
 Even if you intend to support only a subset of features, it is important that your script continue to respond with an empty newline when receiving an unexpected message -- new message types may be added at any time!
 
+## Frame Types
+
+Unlike some protocols, SPI does not have multiple types of frames;
+that does not mean that all frames are equal --
+very often frames are sent in a specific sequence.
+To make it easy to identify the function of a given frame,
+this field will return the frame's index in its packet.
+
+## Frame Flags
+
+There are currently no flags set by this analyzer,
+but flags may be added in the future.
+
 ## Python Module
 
 If you're hoping to put together an analyzer as quickly as possible,

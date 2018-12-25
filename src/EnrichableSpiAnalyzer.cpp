@@ -244,6 +244,7 @@ void EnrichableSpiAnalyzer::AdvanceToActiveEnableEdge()
 		}
 		mCurrentSample = mEnable->GetSampleNumber();
 		mClock->AdvanceToAbsPosition( mCurrentSample );
+		packetFrameIndex = 0;
 	}else
 	{
 		mCurrentSample = mClock->GetSampleNumber();
@@ -404,7 +405,7 @@ void EnrichableSpiAnalyzer::GetWord()
 	result_frame.mData1 = mosi_word;
 	result_frame.mData2 = miso_word;
 	result_frame.mFlags = 0;
-	result_frame.mType = 0;
+	result_frame.mType = packetFrameIndex++;
 	U64 frame_index = mResults->AddFrame( result_frame );
 
 	//save the resuls:

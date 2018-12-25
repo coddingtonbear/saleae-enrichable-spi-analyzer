@@ -1,9 +1,13 @@
+import logging
 import sys
 from typing import List, Optional
 
 from saleae_enrichable_spi_analyzer import (
     Channel, EnrichableSpiAnalyzer, Marker, MarkerType
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 class SC16IS7xxAnalyzer(EnrichableSpiAnalyzer):
@@ -61,10 +65,8 @@ class SC16IS7xxAnalyzer(EnrichableSpiAnalyzer):
         direction: Channel,
         value: int
     ) -> List[str]:
+        request_phase = frame_type == 0
         if direction == Channel.MOSI:
-            request_phase = packet_id != self.last_packet_id_mosi
-            self.last_packet_id_mosi = packet_id
-
             if request_phase:
                 read = value & 0x80
                 self.request_is_write = not read
@@ -72,16 +74,19 @@ class SC16IS7xxAnalyzer(EnrichableSpiAnalyzer):
                 channel = (value >> 1) & 0x3
 
                 if channel not in self.CHANNEL_NAMES:
-                    # If we found an unexpected channel, we're probably
-                    # mis-guessing which phase we're in.
-                    self.request_phase = False
-                    return
+                    logger.error(
+                        "In request phase, but found unexpected data "
+                        "in first frame: %s.",
+                        hex(value)
+                    )
+                    return []
 
                 return [
+                    hex(value),
                     (
-                        "{readwrite} {register} of channel {channel}".format(
-                            readwrite="Read" if read else "Write",
-                            register=self.get_register_name(register, read),
+                        "{readwrite} {register} {channel}".format(
+                            readwrite="R" if read else "W",
+                            register=hex(register),
                             channel=self.CHANNEL_NAMES[channel]
                         )
                     ),
@@ -93,24 +98,22 @@ class SC16IS7xxAnalyzer(EnrichableSpiAnalyzer):
                         )
                     ),
                     (
-                        "{readwrite} {register} {channel}".format(
-                            readwrite="R" if read else "W",
-                            register=hex(register),
+                        "{readwrite} {register} of channel {channel}".format(
+                            readwrite="Read" if read else "Write",
+                            register=self.get_register_name(register, read),
                             channel=self.CHANNEL_NAMES[channel]
                         )
-                    )
+                    ),
                 ]
             else:
                 if self.request_is_write:
                     return [hex(value)]
+                return []
         else:
-            request_phase = packet_id != self.last_packet_id_miso
-            self.last_packet_id_miso = packet_id
-
             if not request_phase and not self.request_is_write:
                 return [hex(value)]
-            else:
-                return []
+
+        return []
 
     def get_markers(
         self,

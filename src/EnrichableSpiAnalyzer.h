@@ -76,6 +76,7 @@ protected:  //vars
 	pid_t commandPid = 0;
 	int inpipefd[2];
 	int outpipefd[2];
+	U8 packetFrameIndex = 0;
 
 #pragma warning( pop )
 };
