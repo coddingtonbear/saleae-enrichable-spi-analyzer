@@ -414,7 +414,7 @@ strings of varying lengths.
 Return markers to display at given sample points.
 By default, no markers are displayed.
 
-### `handle_tabular`
+#### `handle_tabular`
 
 ```python
     def handle_tabular(
