@@ -1,5 +1,7 @@
 # Enrichable SPI Analyzer for Saleae Logic
 
+[![Build Status](https://travis-ci.org/coddingtonbear/saleae-enrichable-spi-analyzer.svg?branch=master)](https://travis-ci.org/coddingtonbear/saleae-enrichable-spi-analyzer)
+
 The built-in SPI Analyzer for the Saleae Logic provides you with only a few basic options for how to display the transferred bytes -- as ascii text, or in one of several numeric formats.
 What if you're working with an SPI device that encodes more than just integer or text data into those bytes, or even stores multiple values in each byte that will require you to either do the math in your head, export the data for post-processing, or display the frame as binary bits so you can directly look at the parts that matter to you?
 That's the sort of thing computers are great at doing; why don't we just let your computer do that?
