@@ -115,7 +115,7 @@ but that line may be empty if you have no desire to handle the received message 
 
 ![Bubbles](https://s3-us-west-2.amazonaws.com/coddingtonbear-public/github/saleae-enrichable-spi-analyzer/bubbles_2.png)
 
-For each frame found by Saleae Logic, your script will receive on stdin the following tab-delimited fields ending with a newline character:
+For each frame _displayed_, your script will receive on stdin the following tab-delimited fields ending with a newline character:
 
 * "bubble"
 * packet id: A hexadecimal integer indicating the packet that this
@@ -157,7 +157,7 @@ If you would not like to set a value, return an empty line.
 
 ![Tabular](https://s3-us-west-2.amazonaws.com/coddingtonbear-public/github/saleae-enrichable-spi-analyzer/tabular_2.png)
 
-For each frame found by Saleae Logic, your script will receive on stdin the following tab-delimited fields ending with a newline character:
+For each frame _analyzed_, your script will receive on stdin the following tab-delimited fields ending with a newline character:
 
 * "tabular"
 * packet id: A hexadecimal integer indicating the packet that this
@@ -194,7 +194,7 @@ If you would not like to set a value, return an empty line.
 
 ![Markers](https://s3-us-west-2.amazonaws.com/coddingtonbear-public/github/saleae-enrichable-spi-analyzer/markers_3.png)
 
-For every sample point, your script will receive on stdin the following tab-delimited fields ending with a newline character:
+For every frame _analyzed_, your script will receive on stdin the following tab-delimited fields ending with a newline character:
 
 * "marker"
 * packet id: A hexadecimal integer indicating the packet that this
