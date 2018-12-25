@@ -22,8 +22,6 @@ public:
 	virtual void GenerateTransactionTabularText( U64 transaction_id, DisplayBase display_base );
 
 protected: //functions
-	bool GetInputLine(char* buffer, unsigned bufferLength);
-	bool HandleInput(Channel& channel);
 
 protected:  //vars
 	EnrichableSpiAnalyzerSettings* mSettings;
