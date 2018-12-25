@@ -1,5 +1,7 @@
 os:
 - linux
+- osx
+- windows
 language: cpp
 script:
 - ./.travis-build.sh
