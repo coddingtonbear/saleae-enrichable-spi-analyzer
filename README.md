@@ -40,7 +40,7 @@ cmake ..
 cmake --build .
 ```
 
-### Ubuntu 16.04
+### Ubuntu 18.04
 
 Dependencies:
 - CMake 3.11+
@@ -62,32 +62,18 @@ cmake --build .
 
 ### Windows
 
-Dependencies:
-- Visual Studio 2015 Update 3
-- CMake 3.11+
+Unfortunately, Windows is not currently supported due to the fact that this library relies upon Posix interfaces like `pipe` and `fork`.
+If you would like to add support for Windows, it should be as easy as implementing Windows-compatible versions of the following functions:
 
-**Visual Studio 2015**
+* `void EnrichableSpiAnalyzer::StartSubprocess()`
+* `void EnrichableSpiAnalyzer::StopSubprocess()`
+* `bool EnrichableSpiAnalyzer::SendOutputLine(const char* buffer, unsigned bufferLength)`
+* `bool EnrichableSpiAnalyzer::GetInputLine(char* buffer, unsigned bufferLength)`
 
-*Note - newer versions of Visual Studio should be fine.*
-
-Setup options:
-- Programming Languages > Visual C++ > select all sub-components.
-
-Note - if CMake has any problems with the MSVC compiler, it's likely a component is missing.
-
-**CMake**
-
-Download and install the latest CMake release here.
-https://cmake.org/download/
-
-Building the analyzer:
-```
-mkdir build
-cd build
-cmake ..
-```
-
-Then, open the newly created solution file located here: `build\spi_analyzer.sln`
+There _are_ Windows equivalents of the aforementioned `pipe` and `fork`
+(see more information here: https://support.microsoft.com/en-us/help/190351/how-to-spawn-console-processes-with-redirected-standard-handles),
+so although that is better left to somebody more familiar with Windows,
+it likely isn't a huge task for somebody who is!
 
 ## Use
 
