@@ -508,9 +508,9 @@ void EnrichableSpiAnalyzer::GetWord()
 
 bool EnrichableSpiAnalyzer::GetScriptResponse(
 	const char* outBuffer,
-	uint outBufferLength,
+	unsigned outBufferLength,
 	char* inBuffer,
-	uint inBufferLength
+	unsigned inBufferLength
 ) {
 	LockSubprocess();
 	SendOutputLine(outBuffer, outBufferLength);
@@ -518,14 +518,14 @@ bool EnrichableSpiAnalyzer::GetScriptResponse(
 	UnlockSubprocess();
 }
 
-bool EnrichableSpiAnalyzer::SendOutputLine(const char* buffer, uint bufferLength) {
+bool EnrichableSpiAnalyzer::SendOutputLine(const char* buffer, unsigned bufferLength) {
 	//std::cerr << ">> ";
 	//std::cerr << buffer;
 	write(outpipefd[1], buffer, bufferLength);
 }
 
-bool EnrichableSpiAnalyzer::GetInputLine(char* buffer, uint bufferLength) {
-	uint bufferPos = 0;
+bool EnrichableSpiAnalyzer::GetInputLine(char* buffer, unsigned bufferLength) {
+	unsigned bufferPos = 0;
 
 	//std::cerr << "<< ";
 
@@ -553,7 +553,7 @@ bool EnrichableSpiAnalyzer::GetInputLine(char* buffer, uint bufferLength) {
 	return true;
 }
 
-AnalyzerResults::MarkerType EnrichableSpiAnalyzer::GetMarkerType(char* buffer, uint bufferLength) {
+AnalyzerResults::MarkerType EnrichableSpiAnalyzer::GetMarkerType(char* buffer, unsigned bufferLength) {
 	if(strncmp(buffer, "ErrorDot", strlen(buffer)) == 0) {
 		return AnalyzerResults::ErrorDot;
 	} else if(strncmp(buffer, "Square", strlen(buffer)) == 0) {

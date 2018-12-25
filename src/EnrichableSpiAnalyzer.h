@@ -34,16 +34,16 @@ public:
 	// Script communication functions
 	bool GetScriptResponse(
 		const char* outBuffer,
-		uint outBufferLength,
+		unsigned outBufferLength,
 		char* inBuffer,
-		uint inBufferLength
+		unsigned inBufferLength
 	);
-	bool SendOutputLine(const char* buffer, uint bufferLength);
-	bool GetInputLine(char* buffer, uint bufferLength);
+	bool SendOutputLine(const char* buffer, unsigned bufferLength);
+	bool GetInputLine(char* buffer, unsigned bufferLength);
 	void LockSubprocess();
 	void UnlockSubprocess();
 	bool GetFeatureEnablement(const char* feature);
-	AnalyzerResults::MarkerType GetMarkerType(char* buffer, uint bufferLength);
+	AnalyzerResults::MarkerType GetMarkerType(char* buffer, unsigned bufferLength);
 
 	bool featureMarker;
 	bool featureBubble;
