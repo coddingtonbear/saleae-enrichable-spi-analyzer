@@ -12,8 +12,9 @@ Now you can focus on solving your actual problem instead of interpreting inscrut
 ## Related
 
 * [python-saleae-enrichable-analyzer](https://github.com/coddingtonbear/python-saleae-enrichable-analyzer): A Python module that intends to make it extremely easy for you to write your own enrichment script.
+* [saleae-enrichable-i2c-analyzer](https://github.com/coddingtonbear/saleae-enrichable-i2c-analyzer): A version of the Saleae I2C analyzer that supports enrichment.
 
-## Compiling
+## Getting Started
 
 ### MacOS
 
