@@ -247,9 +247,9 @@ If you would not like to set a marker on any sample, return an empty line.
 ### Feature (Enablement)
 
 For either performance reasons or expediency, you might want to receive messages of only certain types.
-Upon launching your script, your script will be given the opportunity to disable specific message types by repsonding appropriately.
+Upon launching your script, your script will be given the opportunity to disable specific message types by responding appropriately.
 
-For message types that can be disabled by this analyzer, your script will recieve the following tab-delimited fields ending with a newline character:
+For message types that can be disabled by this analyzer, your script will receive the following tab-delimited fields ending with a newline character:
 
 * "feature"
 * "bubble", "marker", or "tabular"
