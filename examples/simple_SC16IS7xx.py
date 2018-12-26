@@ -50,8 +50,6 @@ class SC16IS7xxAnalyzer(EnrichableAnalyzer):
 
     def __init__(self, *args, **kwargs):
         super(SC16IS7xxAnalyzer, self).__init__(*args, **kwargs)
-        self.last_packet_id_mosi = None
-        self.last_packet_id_miso = None
         self.request_is_write = False
 
     def handle_bubble(
