@@ -15,6 +15,8 @@ src/EnrichableSpiAnalyzerSettings.cpp
 src/EnrichableSpiAnalyzerSettings.h
 src/EnrichableSpiSimulationDataGenerator.cpp
 src/EnrichableSpiSimulationDataGenerator.h
+src/EnrichableAnalyzerSubprocess.cpp
+src/EnrichableAnalyzerSubprocess.h
 )
 
 add_analyzer_plugin(enrichable_spi_analyzer SOURCES ${SOURCES})

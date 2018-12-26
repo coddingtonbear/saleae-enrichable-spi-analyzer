@@ -8,10 +8,11 @@
 
 #pragma warning(disable: 4996) //warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead.
 
-EnrichableSpiAnalyzerResults::EnrichableSpiAnalyzerResults( EnrichableSpiAnalyzer* analyzer, EnrichableSpiAnalyzerSettings* settings )
+EnrichableSpiAnalyzerResults::EnrichableSpiAnalyzerResults( EnrichableSpiAnalyzer* analyzer, EnrichableSpiAnalyzerSettings* settings, EnrichableAnalyzerSubprocess* subprocess )
 :	AnalyzerResults(),
 	mSettings( settings ),
-	mAnalyzer( analyzer )
+	mAnalyzer( analyzer ),
+	mSubprocess( subprocess )
 {
 }
 
@@ -28,60 +29,23 @@ void EnrichableSpiAnalyzerResults::GenerateBubbleText( U64 frame_index, Channel&
 
 	if( ( frame.mFlags & SPI_ERROR_FLAG ) == 0 )
 	{
-		if(mAnalyzer->featureBubble) {
-			U64 packet_id = GetPacketContainingFrameSequential( frame_index );
-
-			outputStream << BUBBLE_PREFIX;
-			outputStream << UNIT_SEPARATOR;
-			if(packet_id != INVALID_RESULT_INDEX) {
-				outputStream << std::hex << packet_id;
+		if(mSubprocess->BubbleEnabled()) {
+			std::string channelName;
+			if(channel == mSettings->mMosiChannel) {
+				channelName = "mosi";
+			} else {
+				channelName = "miso";
 			}
-			outputStream << UNIT_SEPARATOR;
-			outputStream << std::hex << frame_index;
-			outputStream << UNIT_SEPARATOR;
-			outputStream << std::hex << frame.mStartingSampleInclusive;
-			outputStream << UNIT_SEPARATOR;
-			outputStream << std::hex << frame.mEndingSampleInclusive;
-			outputStream << UNIT_SEPARATOR;
-			outputStream << std::hex << (U64)frame.mType;
-			outputStream << UNIT_SEPARATOR;
-			outputStream << std::hex << (U64)frame.mFlags;
-			outputStream << UNIT_SEPARATOR;
 
-			std::string value;
-			if( channel == mSettings->mMosiChannel )
-			{
-				outputStream << MOSI_PREFIX;
-				outputStream << UNIT_SEPARATOR;
-				outputStream << std::hex << frame.mData1;
-				outputStream << LINE_SEPARATOR;
-
-				value = outputStream.str();
+			std::vector<std::string> bubbles = mSubprocess->EmitBubble(
+				GetPacketContainingFrameSequential(frame_index),
+				frame_index,
+				frame,
+				channelName
+			);
+			for(const std::string& bubbleText: bubbles) {
+				AddResultString(bubbleText.c_str());
 			}
-			else
-			{
-				outputStream << MISO_PREFIX;
-				outputStream << UNIT_SEPARATOR;
-				outputStream << std::hex << frame.mData2;
-				outputStream << LINE_SEPARATOR;
-
-				value = outputStream.str();
-			}
-			mAnalyzer->LockSubprocess();
-			mAnalyzer->SendOutputLine(value.c_str(), value.length());
-			char bubbleText[256];
-			while(true) {
-				mAnalyzer->GetInputLine(
-					bubbleText,
-					256
-				);
-				if(strlen(bubbleText) > 0) {
-					AddResultString(bubbleText);
-				} else {
-					break;
-				}
-			}
-			mAnalyzer->UnlockSubprocess();
 		} else {
 			if( channel == mSettings->mMosiChannel )
 			{
@@ -168,48 +132,15 @@ void EnrichableSpiAnalyzerResults::GenerateFrameTabularText( U64 frame_index, Di
 	ClearTabularText();
 	Frame frame = GetFrame( frame_index );
 
-	if(mAnalyzer->featureTabular) {
-		U64 packet_id = GetPacketContainingFrameSequential( frame_index );
-		std::stringstream outputStream;
-
-		outputStream << TABULAR_PREFIX;
-		outputStream << UNIT_SEPARATOR;
-		if(packet_id != INVALID_RESULT_INDEX) {
-			outputStream << std::hex << packet_id;
+	if(mSubprocess->TabularEnabled()) {
+		std::vector<std::string> tabularLines = mSubprocess->EmitTabular(
+			GetPacketContainingFrameSequential( frame_index ),
+			frame_index,
+			frame
+		);
+		for(const std::string& tabularText: tabularLines) {
+			AddTabularText(tabularText.c_str());
 		}
-		outputStream << UNIT_SEPARATOR;
-		outputStream << std::hex << frame_index;
-		outputStream << UNIT_SEPARATOR;
-		outputStream << std::hex << frame.mStartingSampleInclusive;
-		outputStream << UNIT_SEPARATOR;
-		outputStream << std::hex << frame.mEndingSampleInclusive;
-		outputStream << UNIT_SEPARATOR;
-		outputStream << std::hex << (U64)frame.mType;
-		outputStream << UNIT_SEPARATOR;
-		outputStream << std::hex << (U64)frame.mFlags;
-		outputStream << UNIT_SEPARATOR;
-		outputStream << std::hex << frame.mData1;
-		outputStream << UNIT_SEPARATOR;
-		outputStream << std::hex << frame.mData2;
-		outputStream << LINE_SEPARATOR;
-
-		std::string value = outputStream.str();
-
-		mAnalyzer->LockSubprocess();
-		mAnalyzer->SendOutputLine(value.c_str(), value.length());
-		char tabularText[512];
-		while(true) {
-			mAnalyzer->GetInputLine(
-				tabularText,
-				512
-			);
-			if(strlen(tabularText) > 0) {
-				AddTabularText(tabularText);
-			} else {
-				break;
-			}
-		}
-		mAnalyzer->UnlockSubprocess();
 	} else {
 		bool mosi_used = true;
 		bool miso_used = true;

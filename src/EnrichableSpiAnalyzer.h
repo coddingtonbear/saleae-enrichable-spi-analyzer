@@ -4,17 +4,7 @@
 #include <Analyzer.h>
 #include "EnrichableSpiAnalyzerResults.h"
 #include "EnrichableSpiSimulationDataGenerator.h"
-
-#define BUBBLE_PREFIX "bubble"
-#define MARKER_PREFIX "marker"
-#define TABULAR_PREFIX "tabular"
-#define FEATURE_PREFIX "feature"
-
-#define MOSI_PREFIX "mosi"
-#define MISO_PREFIX "miso"
-
-#define UNIT_SEPARATOR '\t'
-#define LINE_SEPARATOR '\n'
+#include "EnrichableAnalyzerSubprocess.h"
 
 class EnrichableSpiAnalyzerSettings;
 class EnrichableSpiAnalyzer : public Analyzer2
@@ -31,27 +21,7 @@ public:
 	virtual const char* GetAnalyzerName() const;
 	virtual bool NeedsRerun();
 
-	// Script communication functions
-	bool GetScriptResponse(
-		const char* outBuffer,
-		unsigned outBufferLength,
-		char* inBuffer,
-		unsigned inBufferLength
-	);
-	bool SendOutputLine(const char* buffer, unsigned bufferLength);
-	bool GetInputLine(char* buffer, unsigned bufferLength);
-	void LockSubprocess();
-	void UnlockSubprocess();
-	bool GetFeatureEnablement(const char* feature);
-	AnalyzerResults::MarkerType GetMarkerType(char* buffer, unsigned bufferLength);
-
-	bool featureMarker;
-	bool featureBubble;
-	bool featureTabular;
 protected: //functions
-	void StartSubprocess();
-	void StopSubprocess();
-
 	void Setup();
 	void AdvanceToActiveEnableEdge();
 	bool IsInitialClockPolarityCorrect();
@@ -65,6 +35,7 @@ protected:  //vars
 	std::auto_ptr< EnrichableSpiAnalyzerSettings > mSettings;
 	std::auto_ptr< EnrichableSpiAnalyzerResults > mResults;
 	bool mSimulationInitilized;
+	std::auto_ptr< EnrichableAnalyzerSubprocess > mSubprocess;
 	EnrichableSpiSimulationDataGenerator mSimulationDataGenerator;
 
 	AnalyzerChannelData* mMosi; 
@@ -76,9 +47,6 @@ protected:  //vars
 	AnalyzerResults::MarkerType mArrowMarker;
 	std::vector<U64> mArrowLocations;
 
-	pid_t commandPid = 0;
-	int inpipefd[2];
-	int outpipefd[2];
 	U8 packetFrameIndex = 0;
 
 #pragma warning( pop )

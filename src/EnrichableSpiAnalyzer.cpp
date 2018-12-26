@@ -5,21 +5,8 @@
 
 #include <iostream>
 #include <sstream>
-#include <string>
-#include <mutex>
-
-#include <unistd.h>
-#include <fcntl.h>
-#include <signal.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <errno.h>
-#include <wordexp.h>
-
  
 //enum SpiBubbleType { SpiData, SpiError };
-
-std::mutex subprocessLock;
 
 EnrichableSpiAnalyzer::EnrichableSpiAnalyzer()
 :	Analyzer2(),
@@ -29,9 +16,7 @@ EnrichableSpiAnalyzer::EnrichableSpiAnalyzer()
 	mMiso( NULL ),
 	mClock( NULL ),
 	mEnable( NULL ),
-	featureMarker(true),
-	featureBubble(true),
-	featureTabular(true)
+	mSubprocess( new EnrichableAnalyzerSubprocess() )
 {	
 	SetAnalyzerSettings( mSettings.get() );
 }
@@ -43,7 +28,7 @@ EnrichableSpiAnalyzer::~EnrichableSpiAnalyzer()
 
 void EnrichableSpiAnalyzer::SetupResults()
 {
-	mResults.reset( new EnrichableSpiAnalyzerResults( this, mSettings.get() ) );
+	mResults.reset( new EnrichableSpiAnalyzerResults( this, mSettings.get(), mSubprocess.get() ) );
 	SetAnalyzerResults( mResults.get() );
 
 	if( mSettings->mMosiChannel != UNDEFINED_CHANNEL )
@@ -56,7 +41,8 @@ void EnrichableSpiAnalyzer::WorkerThread()
 {
 	Setup();
 
-	StartSubprocess();
+	mSubprocess->SetParserCommand(mSettings->mParserCommand);
+	mSubprocess->Start();
 
 	AdvanceToActiveEnableEdgeWithCorrectClockPolarity();
 
@@ -66,116 +52,7 @@ void EnrichableSpiAnalyzer::WorkerThread()
 		CheckIfThreadShouldExit();
 	}
 
-	StopSubprocess();
-}
-
-void EnrichableSpiAnalyzer::StartSubprocess() {
-	if(pipe(inpipefd) < 0) {
-		std::cerr << "Failed to create input pipe: ";
-		std::cerr << errno;
-		std::cerr << "\n";
-		exit(errno);
-	}
-	if(pipe(outpipefd) < 0) {
-		std::cerr << "Failed to create output pipe: ";
-		std::cerr << errno;
-		std::cerr << "\n";
-		exit(errno);
-	}
-	std::cerr << "Starting fork...\n";
-	commandPid = fork();
-
-	if(commandPid == 0) {
-		std::cerr << "Forked...\n";
-		if(dup2(outpipefd[0], STDIN_FILENO) < 0) {
-			std::cerr << "Failed to redirect STDIN: ";
-			std::cerr << errno;
-			std::cerr << "\n";
-			exit(errno);
-		}
-		if(dup2(inpipefd[1], STDOUT_FILENO) < 0) {
-			std::cerr << "Failed to redirect STDOUT: ";
-			std::cerr << errno;
-			std::cerr << "\n";
-			exit(errno);
-		}
-
-		wordexp_t cmdParsed;
-		char *args[25];
-
-		wordexp(mSettings->mParserCommand, &cmdParsed, 0);
-		int i;
-		for(i = 0; i < cmdParsed.we_wordc; i++) {
-			args[i] = cmdParsed.we_wordv[i];
-		}
-		args[i] = (char*)NULL;
-
-		close(inpipefd[0]);
-		close(inpipefd[1]);
-		close(outpipefd[0]);
-		close(outpipefd[1]);
-
-		execvp(args[0], args);
-
-		std::cerr << "Failed to spawn analyzer subprocess!\n";
-	} else {
-		close(inpipefd[1]);
-		close(outpipefd[0]);
-	}
-
-	// Check script to see which features are enabled;
-	// * 'no': This feature can be skipped.  This is used to improve
-	//   performance by allowing the script to not receive messages for
-	//   features it does not support.
-	// * 'yes': Send messages of this type.
-	// * Anything else: Send messages of this type.  This might be surprising,
-	//   but it's more important to me that the default case be simple
-	//   than the default case be high-performance.   Scripts are expected
-	//   to respond to even unhandled messages.
-	featureBubble = GetFeatureEnablement(BUBBLE_PREFIX);
-	featureMarker = GetFeatureEnablement(MARKER_PREFIX);
-	featureTabular = GetFeatureEnablement(TABULAR_PREFIX);
-}
-
-void EnrichableSpiAnalyzer::StopSubprocess() {
-	close(inpipefd[0]);
-	close(outpipefd[1]);
-
-	kill(commandPid, SIGINT);
-}
-
-bool EnrichableSpiAnalyzer::GetFeatureEnablement(const char* feature) {
-	std::stringstream outputStream;
-	char result[16];
-	std::string value;
-
-	outputStream << FEATURE_PREFIX;
-	outputStream << UNIT_SEPARATOR;
-	outputStream << feature;
-	outputStream << LINE_SEPARATOR;
-	value = outputStream.str();
-
-	GetScriptResponse(
-		value.c_str(),
-		value.length(),
-		result,
-		16
-	);
-	if(strcmp(result, "no") == 0) {
-		std::cerr << "message type \"";
-		std::cerr << feature;
-		std::cerr << "\" disabled\n";
-		return false;
-	}
-	return true;
-}
-
-void EnrichableSpiAnalyzer::LockSubprocess() {
-	subprocessLock.lock();
-}
-
-void EnrichableSpiAnalyzer::UnlockSubprocess() {
-	subprocessLock.unlock();
+	mSubprocess->Stop();
 }
 
 void EnrichableSpiAnalyzer::AdvanceToActiveEnableEdgeWithCorrectClockPolarity()
@@ -410,7 +287,7 @@ void EnrichableSpiAnalyzer::GetWord()
 	result_frame.mData2 = miso_word;
 	result_frame.mFlags = 0;
 	result_frame.mType = packetFrameIndex++;
-	U64 frame_index = mResults->AddFrame( result_frame );
+	U64 frameIndex = mResults->AddFrame( result_frame );
 
 	//save the resuls:
 	U32 count = mArrowLocations.size();
@@ -420,173 +297,40 @@ void EnrichableSpiAnalyzer::GetWord()
 		);
 	}
 
-	if(featureMarker) {
-		U64 packet_id = mResults->GetNumPackets();
-		std::stringstream outputStream;
-
-		outputStream << MARKER_PREFIX;
-		outputStream << UNIT_SEPARATOR;
-		if(packet_id != INVALID_RESULT_INDEX) {
-			outputStream << std::hex << packet_id;
-		}
-		outputStream << UNIT_SEPARATOR;
-		outputStream << std::hex << frame_index;
-		outputStream << UNIT_SEPARATOR;
-		outputStream << std::hex << count;
-		outputStream << UNIT_SEPARATOR;
-		outputStream << std::hex << result_frame.mStartingSampleInclusive;
-		outputStream << UNIT_SEPARATOR;
-		outputStream << std::hex << result_frame.mEndingSampleInclusive;
-		outputStream << UNIT_SEPARATOR;
-		outputStream << std::hex << (U64)result_frame.mType;
-		outputStream << UNIT_SEPARATOR;
-		outputStream << std::hex << (U64)result_frame.mFlags;
-		outputStream << UNIT_SEPARATOR;
-		outputStream << std::hex << mosi_word;
-		outputStream << UNIT_SEPARATOR;
-		outputStream << std::hex << miso_word;
-		outputStream << LINE_SEPARATOR;
-
-		std::string outputValue = outputStream.str();
-
-		LockSubprocess();
-		SendOutputLine(
-			outputValue.c_str(),
-			outputValue.length()
+	if(mSubprocess->MarkerEnabled()) {
+		std::vector<EnrichableAnalyzerSubprocess::Marker> markers = mSubprocess->EmitMarker(
+			mResults->GetNumPackets(),
+			frameIndex,
+			result_frame,
+			count
 		);
-		char markerMessage[256];
-		while(true) {
-			GetInputLine(
-				markerMessage,
-				256
-			);
-			if(strlen(markerMessage) > 0) {
-				char forever[256];
-				strcpy(forever, markerMessage);
 
-				char *sampleNumberStr = strtok(markerMessage, "\t");
-				char *channelStr = strtok(NULL, "\t");
-				char *markerTypeStr = strtok(NULL, "\t");
-
-				if(sampleNumberStr != NULL && channelStr != NULL && markerTypeStr != NULL) {
-					U64 sampleNumber = strtoll(sampleNumberStr, NULL, 16);
-					Channel* channel = NULL;
-					if(strcmp(channelStr, "mosi") == 0) {
-						channel = &mSettings->mMosiChannel;
-					} else if (strcmp(channelStr, "miso") == 0) {
-						channel = &mSettings->mMisoChannel;
-					}
-					if(channel != NULL) {
-						mResults->AddMarker(
-							mArrowLocations[sampleNumber],
-							GetMarkerType(markerTypeStr, strlen(markerTypeStr)),
-							*channel
-						);
-					}
-				} else {
-					std::cerr << "Unable to tokenize marker message input: \"";
-					std::cerr << forever;
-					std::cerr << "\"; input should be three tab-delimited fields: ";
-					std::cerr << "sample_number\tchannel\tmarker_type\n";
-				}
+		Channel* channel = NULL;
+		for(const EnrichableAnalyzerSubprocess::Marker& marker : markers) {
+			if(marker.channelName == "miso") {
+				channel = &mSettings->mMisoChannel;
+			} else if (marker.channelName == "mosi") {
+				channel = &mSettings->mMosiChannel;
+			}
+			if(channel != NULL) {
+				mResults->AddMarker(
+					mArrowLocations[marker.sampleNumber],
+					marker.markerType,
+					*channel
+				);
 			} else {
 				break;
+				std::cerr << "Received marker request for invalid marker: ";
+				std::cerr << marker.channelName;
+				std::cerr << " ignoring.\n";
 			}
 		}
-		UnlockSubprocess();
 	}
 	
 	mResults->CommitResults();
 
 	if( need_reset == true )
 		AdvanceToActiveEnableEdgeWithCorrectClockPolarity();
-}
-
-bool EnrichableSpiAnalyzer::GetScriptResponse(
-	const char* outBuffer,
-	unsigned outBufferLength,
-	char* inBuffer,
-	unsigned inBufferLength
-) {
-	bool result;
-
-	LockSubprocess();
-	SendOutputLine(outBuffer, outBufferLength);
-	result = GetInputLine(inBuffer, inBufferLength);
-	UnlockSubprocess();
-
-	return result;
-}
-
-bool EnrichableSpiAnalyzer::SendOutputLine(const char* buffer, unsigned bufferLength) {
-	//std::cerr << ">> ";
-	//std::cerr << buffer;
-	write(outpipefd[1], buffer, bufferLength);
-
-	return true;
-}
-
-bool EnrichableSpiAnalyzer::GetInputLine(char* buffer, unsigned bufferLength) {
-	unsigned bufferPos = 0;
-	bool result = false;
-
-	//std::cerr << "<< ";
-
-	while(true) {
-		int result = read(inpipefd[0], &buffer[bufferPos], 1);
-		if(buffer[bufferPos] == '\n') {
-			break;
-		}
-
-		//std::cerr << buffer[bufferPos];
-
-		bufferPos++;
-
-		if(bufferPos == bufferLength - 1) {
-			break;
-		}
-	}
-	buffer[bufferPos] = '\0';
-
-	//std::cerr << '\n';
-
-	if(strlen(buffer) > 0) {
-		result = true;
-	}
-
-	return result;
-}
-
-AnalyzerResults::MarkerType EnrichableSpiAnalyzer::GetMarkerType(char* buffer, unsigned bufferLength) {
-	AnalyzerResults::MarkerType markerType = AnalyzerResults::Dot;
-
-	if(strncmp(buffer, "ErrorDot", strlen(buffer)) == 0) {
-		markerType = AnalyzerResults::ErrorDot;
-	} else if(strncmp(buffer, "Square", strlen(buffer)) == 0) {
-		markerType = AnalyzerResults::Square;
-	} else if(strncmp(buffer, "ErrorSquare", strlen(buffer)) == 0) {
-		markerType = AnalyzerResults::ErrorSquare;
-	} else if(strncmp(buffer, "UpArrow", strlen(buffer)) == 0) {
-		markerType = AnalyzerResults::UpArrow;
-	} else if(strncmp(buffer, "DownArrow", strlen(buffer)) == 0) {
-		markerType = AnalyzerResults::DownArrow;
-	} else if(strncmp(buffer, "X", strlen(buffer)) == 0) {
-		markerType = AnalyzerResults::X;
-	} else if(strncmp(buffer, "ErrorX", strlen(buffer)) == 0) {
-		markerType = AnalyzerResults::ErrorX;
-	} else if(strncmp(buffer, "Start", strlen(buffer)) == 0) {
-		markerType = AnalyzerResults::Start;
-	} else if(strncmp(buffer, "Stop", strlen(buffer)) == 0) {
-		markerType = AnalyzerResults::Stop;
-	} else if(strncmp(buffer, "One", strlen(buffer)) == 0) {
-		markerType = AnalyzerResults::One;
-	} else if(strncmp(buffer, "Zero", strlen(buffer)) == 0) {
-		markerType = AnalyzerResults::Zero;
-	} else if(strncmp(buffer, "Dot", strlen(buffer)) == 0) {
-		markerType = AnalyzerResults::Dot;
-	}
-
-	return markerType;
 }
 
 bool EnrichableSpiAnalyzer::NeedsRerun()

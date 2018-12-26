@@ -2,6 +2,7 @@
 #define SPI_ANALYZER_RESULTS
 
 #include <AnalyzerResults.h>
+#include "EnrichableAnalyzerSubprocess.h"
 
 #define SPI_ERROR_FLAG ( 1 << 0 )
 
@@ -11,7 +12,7 @@ class EnrichableSpiAnalyzerSettings;
 class EnrichableSpiAnalyzerResults : public AnalyzerResults
 {
 public:
-	EnrichableSpiAnalyzerResults( EnrichableSpiAnalyzer* analyzer, EnrichableSpiAnalyzerSettings* settings );
+	EnrichableSpiAnalyzerResults( EnrichableSpiAnalyzer* analyzer, EnrichableSpiAnalyzerSettings* settings, EnrichableAnalyzerSubprocess* subprocess );
 	virtual ~EnrichableSpiAnalyzerResults();
 
 	virtual void GenerateBubbleText( U64 frame_index, Channel& channel, DisplayBase display_base );
@@ -26,6 +27,7 @@ protected: //functions
 protected:  //vars
 	EnrichableSpiAnalyzerSettings* mSettings;
 	EnrichableSpiAnalyzer* mAnalyzer;
+	EnrichableAnalyzerSubprocess* mSubprocess;
 };
 
 #endif //SPI_ANALYZER_RESULTS
