@@ -421,7 +421,7 @@ void EnrichableSpiAnalyzer::GetWord()
 	}
 
 	if(featureMarker) {
-		U64 packet_id = mResults->GetPacketContainingFrameSequential( frame_index );
+		U64 packet_id = mResults->GetNumPackets();
 		std::stringstream outputStream;
 
 		outputStream << MARKER_PREFIX;
