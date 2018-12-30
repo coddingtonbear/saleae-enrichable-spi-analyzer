@@ -172,6 +172,10 @@ tabular	84ac	ab6f	3ae3012	3ae309b9	0	0	c6	fa
 
 Your script should respond with any lines you would like to appear in the tabular results on the bottom right side of the UI.
 End your list of lines by sending an empty line.
+
+Due to limitations within Saleae logic: the response to this request must return exactly the same number of strings in the result for each request;
+if you attempt to do otherwise, you may see the following error (sic) "Error: Number of strings in the analyzer results are diffrenet for different display bases" followed by a SIGSEGV.
+
 For example, if the above frame was a read of the RXLVL register on channel A,
 you could respond with the below to show that in the tabular results:
 

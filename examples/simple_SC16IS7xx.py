@@ -4,10 +4,13 @@ from typing import List, Optional
 
 # Note: this requires that you install the companion Python module
 #  -> https://github.com/coddingtonbear/python-saleae-enrichable-analyzer
+# Additionally, that repository includes a more-advanced handler for this
+# chip type.  If you intend to this example as more than an example, you
+# may have better results using the enrichment script bundled in the
+# above repository!
 from saleae_enrichable_analyzer import (
     Channel, EnrichableAnalyzer, Marker, MarkerType
 )
-
 
 logger = logging.getLogger(__name__)
 
