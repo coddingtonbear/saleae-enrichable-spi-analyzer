@@ -1,3 +1,5 @@
+WARNING: This project is no longer maintained or necessary!  Saleae added python analyzer support in their latest versions of Logic, and their handling of this problem is much more elegant.
+
 # Enrichable SPI Analyzer for Saleae Logic
 
 [![Build Status](https://travis-ci.org/coddingtonbear/saleae-enrichable-spi-analyzer.svg?branch=master)](https://travis-ci.org/coddingtonbear/saleae-enrichable-spi-analyzer)
